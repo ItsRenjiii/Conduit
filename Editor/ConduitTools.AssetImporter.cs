@@ -167,6 +167,12 @@ namespace ItsRenji.Conduit
                 // ── Pass 2: read every named setting and the whole importer, write, reimport, read back ──
                 var evidence = CaptureFieldEvidence(importer, staged, null);
                 var stateBefore = CaptureTopLevelState(importer);
+
+                // A texture's type is set through Unity's own setter, which also applies the settings that type
+                // needs - for a Sprite, no power-of-two rescale, no mipmaps, a sprite mode - exactly as the
+                // importer inspector does. Writing the raw field left a rescaled non-power-of-two image with no
+                // Sprite at all. The payload's other fields are applied afterwards, so any it names still win.
+                string typeNote = ApplyTextureTypeThroughImporter(importer, serializedObject, staged);
                 foreach (StagedComponentFieldWrite stage in staged)
                 {
                     ApplyStagedPropertyValue(serializedObject.FindProperty(stage.Name), stage);
@@ -214,9 +220,15 @@ namespace ItsRenji.Conduit
                     report.Append(" WARNING, not applied: ").Append(string.Join("; ", notAppliedFields)).Append('.');
                 }
 
+                if (typeNote != null)
+                {
+                    report.Append(' ').Append(typeNote);
+                }
+
                 if (unnamedChanges.Count > 0)
                 {
-                    report.Append(" WARNING, the write or its reimport also changed: ").Append(string.Join("; ", unnamedChanges)).Append('.');
+                    report.Append(typeNote != null ? " Changed besides the named settings: " : " WARNING, the write or its reimport also changed: ")
+                        .Append(string.Join("; ", unnamedChanges)).Append('.');
                 }
 
                 report.Append(" Asset was saved and reimported, and every value above is read back after the reimport.");
@@ -231,6 +243,47 @@ namespace ItsRenji.Conduit
         #endregion
 
         #region Asset Importer Helpers
+
+        /// <summary>
+        /// When the payload sets a texture's type, sets it through <see cref="TextureImporter.textureType"/> so
+        /// Unity applies that type's dependent settings, then refreshes the serialized view so the payload's
+        /// other fields are written on top of them.
+        /// </summary>
+        /// <param name="importer">The asset's importer.</param>
+        /// <param name="serializedObject">The serialized view of the importer the staged writes go through.</param>
+        /// <param name="staged">The validated writes.</param>
+        /// <returns>A sentence for the report when the type was set this way, otherwise null.</returns>
+        private static string ApplyTextureTypeThroughImporter(AssetImporter importer, SerializedObject serializedObject,
+            List<StagedComponentFieldWrite> staged)
+        {
+            var textureImporter = importer as TextureImporter;
+            if (textureImporter == null) return null;
+
+            StagedComponentFieldWrite typeStage = staged.Find(stage => stage.Name == "m_TextureType");
+            if (typeStage == null) return null;
+
+            int typeValue;
+            if (typeStage.Kind == SerializedPropertyType.Enum && typeStage.EnumIndex >= 0)
+            {
+                string typeName = serializedObject.FindProperty(typeStage.Name).enumNames[typeStage.EnumIndex];
+                if (!Enum.TryParse(typeName, true, out TextureImporterType parsed)) return null;
+                typeValue = (int)parsed;
+            }
+            else
+            {
+                typeValue = (int)typeStage.LongValue;
+            }
+
+            if (!Enum.IsDefined(typeof(TextureImporterType), typeValue)) return null;
+
+            var type = (TextureImporterType)typeValue;
+            if (textureImporter.textureType == type) return null;
+
+            textureImporter.textureType = type;
+            serializedObject.Update();
+            return "The texture type was set through Unity's importer, which applies the settings a " + type
+                + " texture needs, as the importer inspector does; they are listed as changed besides the named settings.";
+        }
 
         /// <summary>
         /// Resolves an asset path to its AssetImporter, distinguishing the failure modes so the caller is

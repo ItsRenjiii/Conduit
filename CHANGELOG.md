@@ -2,6 +2,16 @@
 
 All notable changes to Conduit are recorded here. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 1.0.2 - 2026-11-07
+
+### Fixed
+
+- `gameobject-component-get` no longer fails on a component with a combined flags enum, such as a Canvas. An enum is read as its index, its raw value and its name, and the value is what a write takes back.
+- `object-get-data` given a component's instance id reads that component, not its GameObject.
+- `assets-importer-modify` sets a texture's type through Unity's importer, so switching a non-power-of-two image to Sprite now makes a Sprite. The settings the type brings are listed in the reply.
+- The ProBuilder face material, smoothing, vertex colour, vertex position and authored size writes report what each value was, read the result back after the rebuild, and say when nothing changed.
+- A command that throws reports the exception type and the Conduit frames it passed through, not just its message.
+
 ## 1.0.1 - 2026-11-07
 
 ### Added

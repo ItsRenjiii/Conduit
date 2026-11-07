@@ -831,6 +831,19 @@ namespace ItsRenji.Conduit
                 return "Missing Unity object target.";
             }
 
+            // An instance id names one object exactly, so it resolves to that object. Resolving it through the
+            // GameObject lookup turned a component's id into its GameObject, and the read of the wrong object
+            // passed for the right one.
+            if (int.TryParse(input.Trim(), out int instanceId))
+            {
+                var byId = EditorUtility.InstanceIDToObject(instanceId);
+                if (byId != null)
+                {
+                    unityObject = byId;
+                    return null;
+                }
+            }
+
             GameObject gameObject;
             var sceneError = TryFindGameObject(input, out gameObject);
             if (sceneError == null)

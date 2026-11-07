@@ -524,7 +524,7 @@ VCC then offers each new release as an update. If the project has an older copy 
 2. Press **+** and choose **Add package from git URL...**
 3. Enter `https://github.com/ItsRenjiii/Conduit.git` and press **Add**.
 
-To pin a release, add its tag: `https://github.com/ItsRenjiii/Conduit.git#v1.0.1`.
+To pin a release, add its tag: `https://github.com/ItsRenjiii/Conduit.git#v1.0.2`.
 
 **From a local copy**
 

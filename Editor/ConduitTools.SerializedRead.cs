@@ -373,8 +373,16 @@ namespace ItsRenji.Conduit
                     return JsonQuote(property.stringValue);
 
                 case SerializedPropertyType.Enum:
-                    return "{\"index\":" + property.enumValueIndex +
-                        ",\"name\":" + JsonQuote(property.enumDisplayNames[property.enumValueIndex]) + "}";
+                {
+                    // Unity reports index -1 when the stored value matches no single entry, as a combination of
+                    // flags does, so the raw value is always given: it is what a write takes back verbatim.
+                    int index = property.enumValueIndex;
+                    string[] names = property.enumDisplayNames;
+                    bool named = index >= 0 && index < names.Length;
+                    return "{\"index\":" + index.ToString(CultureInfo.InvariantCulture) +
+                        ",\"value\":" + property.intValue.ToString(CultureInfo.InvariantCulture) +
+                        ",\"name\":" + (named ? JsonQuote(names[index]) : "null") + "}";
+                }
 
                 case SerializedPropertyType.ObjectReference:
                     return JsonSerializedObjectReference(property);

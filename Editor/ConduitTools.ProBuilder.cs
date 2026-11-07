@@ -1574,14 +1574,71 @@ namespace ItsRenji.Conduit
             error = TryResolveFaces(mesh, sections.Length > 2 ? sections[2] : string.Empty, out faces, out indexes);
             if (error != null) return error;
 
+            var renderer = mesh.GetComponent<MeshRenderer>();
+            var previous = new Dictionary<string, int>(StringComparer.Ordinal);
+            var alreadyOn = 0;
+            foreach (var face in faces)
+            {
+                var current = ProBuilderFaceMaterial(renderer, face);
+                if (current == material) alreadyOn++;
+                else CountName(previous, current == null ? "no material" : "'" + current.name + "'");
+            }
+
+            if (alreadyOn == faces.Count)
+            {
+                return "Already at value: all " + faces.Count.ToString(CultureInfo.InvariantCulture) + " face(s) already use '"
+                    + material.name + "'. Nothing was changed.";
+            }
+
             RecordUndo(mesh, "Conduit Set ProBuilder Face Material");
             mesh.SetMaterial(faces, material);
             RebuildProBuilderMesh(mesh);
 
-            var renderer = mesh.GetComponent<MeshRenderer>();
-            var slots = renderer == null ? 0 : renderer.sharedMaterials.Length;
+            // Read back after the rebuild, which recomputes submeshes and can remap the renderer's slots.
+            renderer = mesh.GetComponent<MeshRenderer>();
+            var nowOn = 0;
+            foreach (var face in faces)
+            {
+                if (ProBuilderFaceMaterial(renderer, face) == material) nowOn++;
+            }
 
-            return "Assigned '" + material.name + "' to " + indexes.Count.ToString(CultureInfo.InvariantCulture) + " face(s). The renderer now has " + slots.ToString(CultureInfo.InvariantCulture) + " material slot(s), one per submesh - each extra slot is an extra DRAW CALL, so keep the count deliberate.";
+            var slots = renderer == null ? 0 : renderer.sharedMaterials.Length;
+            return "Assigned '" + material.name + "' to " + faces.Count.ToString(CultureInfo.InvariantCulture) + " face(s): they were on "
+                + DescribeCounts(previous) + (alreadyOn > 0 ? ", and " + alreadyOn.ToString(CultureInfo.InvariantCulture) + " already on '" + material.name + "'" : string.Empty)
+                + ". Read back after the rebuild: " + nowOn.ToString(CultureInfo.InvariantCulture) + " of " + faces.Count.ToString(CultureInfo.InvariantCulture)
+                + " now use it" + (nowOn == faces.Count ? string.Empty : " - the rest did NOT take the material")
+                + ". The renderer now has " + slots.ToString(CultureInfo.InvariantCulture) + " material slot(s), one per submesh - each extra slot is an extra DRAW CALL, so keep the count deliberate.";
+        }
+
+        /// <summary>The material a face renders with: the renderer's slot for the face's submesh.</summary>
+        /// <param name="renderer">The mesh's renderer, or null.</param>
+        /// <param name="face">The face to look up.</param>
+        /// <returns>The face's material, or null when it has none.</returns>
+        private static Material ProBuilderFaceMaterial(MeshRenderer renderer, Face face)
+        {
+            if (renderer == null) return null;
+            var materials = renderer.sharedMaterials;
+            return face.submeshIndex >= 0 && face.submeshIndex < materials.Length ? materials[face.submeshIndex] : null;
+        }
+
+        /// <summary>Adds one to a name's count.</summary>
+        /// <param name="counts">Counts by name.</param>
+        /// <param name="name">Name to count.</param>
+        private static void CountName(Dictionary<string, int> counts, string name)
+        {
+            counts.TryGetValue(name, out int count);
+            counts[name] = count + 1;
+        }
+
+        /// <summary>Describes counts by name, as "'Brick' x3, group 2 x1".</summary>
+        /// <param name="counts">Counts by name.</param>
+        /// <returns>The description, or "nothing else" when empty.</returns>
+        private static string DescribeCounts(Dictionary<string, int> counts)
+        {
+            if (counts.Count == 0) return "nothing else";
+            var parts = new List<string>();
+            foreach (var pair in counts) parts.Add(pair.Key + " x" + pair.Value.ToString(CultureInfo.InvariantCulture));
+            return string.Join(", ", parts);
         }
 
         /// <summary>Sets the smoothing group, which decides where a surface reads as curved.</summary>
@@ -1610,11 +1667,35 @@ namespace ItsRenji.Conduit
             error = TryResolveFaces(mesh, sections.Length > 2 ? sections[2] : string.Empty, out faces, out indexes);
             if (error != null) return error;
 
+            var previous = new Dictionary<string, int>(StringComparer.Ordinal);
+            var alreadyIn = 0;
+            foreach (var face in faces)
+            {
+                if (face.smoothingGroup == group) alreadyIn++;
+                else CountName(previous, "group " + face.smoothingGroup.ToString(CultureInfo.InvariantCulture));
+            }
+
+            if (alreadyIn == faces.Count)
+            {
+                return "Already at value: all " + faces.Count.ToString(CultureInfo.InvariantCulture) + " face(s) are already in smoothing group "
+                    + group.ToString(CultureInfo.InvariantCulture) + ". Nothing was changed.";
+            }
+
             RecordUndo(mesh, "Conduit Set ProBuilder Smoothing");
             foreach (var face in faces) face.smoothingGroup = group;
             RebuildProBuilderMesh(mesh);
 
-            return "Set smoothing group " + group.ToString(CultureInfo.InvariantCulture) + " on " + indexes.Count.ToString(CultureInfo.InvariantCulture) + " face(s). Faces sharing a NON-ZERO group are shaded as one smooth surface where they meet; group 0 leaves every edge hard.";
+            var nowIn = 0;
+            foreach (var face in faces)
+            {
+                if (face.smoothingGroup == group) nowIn++;
+            }
+
+            return "Set smoothing group " + group.ToString(CultureInfo.InvariantCulture) + " on " + faces.Count.ToString(CultureInfo.InvariantCulture)
+                + " face(s): they were in " + DescribeCounts(previous)
+                + (alreadyIn > 0 ? ", and " + alreadyIn.ToString(CultureInfo.InvariantCulture) + " already in group " + group.ToString(CultureInfo.InvariantCulture) : string.Empty)
+                + ". Read back after the rebuild: " + nowIn.ToString(CultureInfo.InvariantCulture) + " of " + faces.Count.ToString(CultureInfo.InvariantCulture)
+                + " are in it. Faces sharing a NON-ZERO group are shaded as one smooth surface where they meet; group 0 leaves every edge hard.";
         }
 
         /// <summary>Reads a colour written as hex, a colour name, or three or four numbers.</summary>
@@ -1757,11 +1838,36 @@ namespace ItsRenji.Conduit
             // GetColors fills white for a mesh that carries no colour array, so this is always as long as
             // the positions - which the colors setter requires and throws over otherwise.
             var colors = mesh.GetColors();
+            var target = PackColor32(applied);
+            var alreadyColoured = 0;
+            foreach (var index in vertices)
+            {
+                if (PackColor32(colors[index]) == target) alreadyColoured++;
+            }
+
+            if (alreadyColoured == vertices.Count)
+            {
+                return "Already at value: all " + vertices.Count.ToString(CultureInfo.InvariantCulture) + " named vertex position(s) are already "
+                    + FormatColor(color) + ". Nothing was changed.";
+            }
+
             foreach (var index in vertices) colors[index] = applied;
 
             RecordUndo(mesh, "Conduit Set ProBuilder Vertex Colors");
             mesh.colors = colors;
             RebuildProBuilderMesh(mesh);
+
+            // Read back after the rebuild rather than trusting the array that was handed in.
+            var written = mesh.GetColors();
+            var nowColoured = 0;
+            foreach (var index in vertices)
+            {
+                if (PackColor32(written[index]) == target) nowColoured++;
+            }
+
+            var evidence = " Before: " + alreadyColoured.ToString(CultureInfo.InvariantCulture) + " of them already had it; read back after the rebuild: "
+                + nowColoured.ToString(CultureInfo.InvariantCulture) + " of " + vertices.Count.ToString(CultureInfo.InvariantCulture) + " have it"
+                + (nowColoured == vertices.Count ? "." : " - the rest did NOT take the colour.");
 
             var renderer = mesh.GetComponent<MeshRenderer>();
             var material = renderer == null || renderer.sharedMaterial == null
@@ -1776,6 +1882,7 @@ namespace ItsRenji.Conduit
                         ? ", including their coincident twins, so the colour blends outward across every "
                             + "face sharing them."
                         : " - the named faces' own vertices only, so the boundary stays crisp.")
+                + evidence
                 + (PlayerSettings.colorSpace == ColorSpace.Linear
                     ? " This project is in LINEAR colour space, so the value stored is the linear form, "
                         + "matching what ProBuilder's own palette writes."
@@ -2217,14 +2324,22 @@ namespace ItsRenji.Conduit
             var handle = 0;
             foreach (var shared in groups) handle = shared;
             var moved = mesh.positions[vertices[0]];
+            if ((moved - model).sqrMagnitude < 1e-12f)
+            {
+                return "Already at value: vertex " + vertices[0].ToString(CultureInfo.InvariantCulture) + " is already at "
+                    + FormatVector3(model) + " in LOCAL space. Nothing was changed.";
+            }
 
             RecordUndo(mesh, "Conduit Set ProBuilder Vertex Position");
             mesh.SetSharedVertexPosition(handle, model);
             RebuildProBuilderMesh(mesh);
 
+            // Read back after the rebuild rather than echoing the position that was asked for.
+            var landed = mesh.positions[vertices[0]];
             return "Moved the coincident group behind vertex "
                 + vertices[0].ToString(CultureInfo.InvariantCulture) + " from " + FormatVector3(moved)
-                + " to " + FormatVector3(model) + " in LOCAL space"
+                + " to " + FormatVector3(landed) + " in LOCAL space, read back after the rebuild"
+                + ((landed - model).sqrMagnitude < 1e-8f ? string.Empty : " - NOT the " + FormatVector3(model) + " requested")
                 + (space == "world"
                     ? ", converted from the world position given"
                     : string.Empty)
@@ -3278,6 +3393,7 @@ namespace ItsRenji.Conduit
                         + "cannot be set. Nothing was changed.";
                 }
 
+                var authoredBefore = (Vector3)sizeProperty.GetValue(shape, null);
                 RecordUndo(shape, "Conduit Fit ProBuilder Shape To Size");
                 RecordUndo(mesh, "Conduit Fit ProBuilder Shape To Size");
                 sizeProperty.SetValue(shape, wanted, null);
@@ -3314,8 +3430,8 @@ namespace ItsRenji.Conduit
                 return "Fitted " + GetGameObjectPath(mesh.gameObject)
                     + ", a Shape-tool object, so its authored size was set and the shape regenerated from "
                     + "it. Measured " + FormatVector3(before) + " -> " + FormatVector3(shapeResult)
-                    + ", requested " + FormatVector3(wanted) + ", authored size now "
-                    + FormatVector3(authored) + ". " + DescribeProBuilderMesh(mesh)
+                    + ", requested " + FormatVector3(wanted) + ", authored size "
+                    + FormatVector3(authoredBefore) + " -> " + FormatVector3(authored) + ". " + DescribeProBuilderMesh(mesh)
                     + " Collision does not follow geometry: run probuilder-colliders-rebuild.";
             }
 

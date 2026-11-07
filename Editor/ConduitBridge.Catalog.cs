@@ -896,7 +896,7 @@ namespace ItsRenji.Conduit
                     return "List every shader loaded in the project with its name as materials reference it, optionally filtered. Use it to find the exact shader name assets-material-create and assets-material-set-shader expect.";
 
                 case "object-get-data":
-                    return "Read one object's serialized data as JSON - the asset or GameObject itself rather than a component on it. Nested object REFERENCES come back as instanceID 0 and cannot be trusted from here; read those from a component through gameobject-component-get instead (conduit-bridge-authoring.md).";
+                    return "Read one object's serialized data as JSON - an asset, a GameObject, or any object by instance id, which reads exactly that object, so a component's id reads the component. Nested object REFERENCES come back as instanceID 0 and cannot be trusted from here; read those from a component through gameobject-component-get instead (conduit-bridge-authoring.md).";
 
                 case "object-modify":
                     return "Write named fields on any object - a component, a GameObject, an asset - by its serialized property names, field by field, through the same writer as gameobject-component-modify: object references resolve from an instanceID, guid or path value, and each field is reported as it was and as read back after the write, with a warning for any field the write changed that the payload did not name.";

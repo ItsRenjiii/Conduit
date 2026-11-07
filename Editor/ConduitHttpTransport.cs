@@ -61,6 +61,9 @@ namespace ItsRenji.Conduit
         /// <summary>Largest command body accepted, in bytes. A bridge command line is small.</summary>
         private const int MAX_BODY_BYTES = 262144;
 
+        /// <summary>Most of Conduit's own stack frames a failed command reports, nearest the throw first.</summary>
+        private const int MAX_FAILURE_FRAMES = 6;
+
         /// <summary>How much of an over-limit body to read and discard before giving up on a clean reply.</summary>
         private const int MAX_DRAIN_BYTES = 4 * MAX_BODY_BYTES;
 
@@ -2593,7 +2596,7 @@ namespace ItsRenji.Conduit
                 // The work itself failed, so failure is the truthful terminal state.
                 // A failure that cannot be recorded leaves the job non-terminal, and that is exactly what
                 // job_status reports to the caller who is waiting on it. That is the channel.
-                ConduitJobLedger.Fail(lease.JobId, "command_failed", ex.Message, out error);
+                ConduitJobLedger.Fail(lease.JobId, "command_failed", DescribeCommandFailure(ex), out error);
 
                 return true;
             }
@@ -2648,15 +2651,37 @@ namespace ItsRenji.Conduit
                     if (request.McpId != null)
                     {
                         ConduitMcpEndpoint.RespondToolResult(request.Context, request.McpId,
-                            "tool '" + request.ToolName + "' failed: " + ex.Message, true);
+                            "tool '" + request.ToolName + "' failed: " + DescribeCommandFailure(ex), true);
                         return;
                     }
 
                     Respond(request.Context, 500, "internal_error", "command_failed",
-                        new JObject { ["error"] = ex.Message });
+                        new JObject { ["error"] = DescribeCommandFailure(ex) });
                 }
                 catch { }
             }
+        }
+
+        /// <summary>
+        /// Describes a command that threw: the exception type and message, then the frames of Conduit's own
+        /// code it passed through. The message alone named no file or line, and the stack was kept nowhere, so
+        /// every crash in a verb had to be reproduced under a probe before its line could be found.
+        /// </summary>
+        /// <param name="ex">The exception the command threw.</param>
+        /// <returns>The type, message and Conduit frames, one per line.</returns>
+        private static string DescribeCommandFailure(Exception ex)
+        {
+            Exception root = ex is System.Reflection.TargetInvocationException && ex.InnerException != null ? ex.InnerException : ex;
+            var builder = new StringBuilder(root.GetType().Name + ": " + root.Message);
+            int frames = 0;
+            foreach (string line in (root.StackTrace ?? string.Empty).Split('\n'))
+            {
+                if (line.IndexOf("ItsRenji.Conduit", StringComparison.Ordinal) < 0) continue;
+                builder.Append('\n').Append(line.Trim());
+                if (++frames == MAX_FAILURE_FRAMES) break;
+            }
+
+            return builder.ToString();
         }
 
         #endregion
