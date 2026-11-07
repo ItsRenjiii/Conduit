@@ -1,0 +1,438 @@
+/*
+SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+Copyright (c) 2026 ItsRenji. All rights reserved.
+
+Licensed under the PolyForm Shield License 1.0.0. See LICENSE.md in the Conduit package, or
+https://polyformproject.org/licenses/shield/1.0.0
+*/
+
+/* ------------------------------------------------------------------------------------------------
+   The Conduit window's own skin.
+
+   Written for this window and used by nothing else. It deliberately does NOT reference the inspector
+   examples: those are reference material, and code that reaches into them takes the reference away
+   from every other project to save a few lines here. The look is shared; the file is not.
+
+   Same two materials as the rest of the brand. A night ground, cream panels lying on it, bronze as
+   the only decorative accent and only ever on an edge. No glow: a soft falloff into a dark ground bands
+   into visible rings on an eight bit display.
+
+   Green, amber and red are not decoration and are never spent on one: they report connection state, so
+   a card's colour answers "is this working" from across the room. Anything that is merely emphasis uses
+   bronze.
+
+   Every colour comes from the block below, so a change of palette is one edit to this file.
+   ------------------------------------------------------------------------------------------------ */
+:root {
+    --cw-night: rgb(16, 14, 12);
+    --cw-night-edge: rgb(38, 33, 27);
+    --cw-night-ink: rgb(163, 154, 141);
+
+    --cw-bone: rgb(242, 237, 228);
+    --cw-bone-raised: rgb(249, 246, 240);
+    --cw-bone-sunk: rgb(232, 226, 214);
+    --cw-bone-line: rgb(215, 207, 193);
+
+    --cw-ink: rgb(35, 32, 28);
+    --cw-ink-dim: rgb(85, 80, 74);
+    --cw-ink-faint: rgb(139, 132, 122);
+
+    --cw-bronze: rgb(138, 110, 69);
+    --cw-bronze-deep: rgb(107, 86, 55);
+    --cw-bronze-soft: rgb(196, 170, 129);
+    --cw-bronze-wash: rgb(236, 229, 214);
+
+    --cw-alert: rgb(183, 38, 30);
+    --cw-alert-deep: rgb(146, 29, 23);
+    --cw-alert-wash: rgb(246, 234, 231);
+    --cw-warn: rgb(154, 91, 46);
+    --cw-warn-wash: rgb(248, 238, 226);
+    --cw-ok: rgb(45, 106, 59);
+    --cw-ok-deep: rgb(34, 83, 45);
+    --cw-ok-wash: rgb(232, 241, 232);
+}
+
+/* The night the whole window sits on. Cards are then the only lit surfaces in it. The starfield tile
+   is attached in code, so the repeat pair belongs here: without it the default scale mode stretches
+   one 256px tile over the whole window and the stars come out as smears. */
+.cw-root {
+    background-color: var(--cw-night);
+    background-repeat: repeat;
+    background-size: auto;
+    color: var(--cw-night-ink);
+    padding-top: 0;
+    padding-bottom: 12px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Header: the roof. Sits on the night with no panel of its own, so the first card below it reads as
+   the first lit surface rather than as a second header.
+   ------------------------------------------------------------------------------------------------ */
+.cw-header {
+    align-items: center;
+    padding-top: 18px;
+    padding-bottom: 14px;
+}
+
+/* The mark's box, not the art: the image is scaled to fit inside it, so a wider mark letterboxes
+   rather than cropping and every brand surface shows it at the same presence. */
+.cw-header__logo {
+    width: 210px;
+    height: 118px;
+    margin-bottom: 4px;
+}
+
+.cw-header__title {
+    -unity-font-style: bold;
+    font-size: 15px;
+    letter-spacing: 1px;
+    color: var(--cw-bone);
+    -unity-text-align: middle-center;
+}
+
+.cw-header__subtitle {
+    font-size: 11px;
+    color: var(--cw-bronze-soft);
+    -unity-text-align: middle-center;
+    margin-top: 3px;
+    white-space: normal;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Cards: the leather. One border colour, one radius, no shadow - a shadow into the night is the
+   banding case again.
+   ------------------------------------------------------------------------------------------------ */
+.cw-card {
+    background-color: var(--cw-bone-raised);
+    border-left-color: var(--cw-bone-line);
+    border-right-color: var(--cw-bone-line);
+    border-top-color: var(--cw-bone-line);
+    border-bottom-color: var(--cw-bone-line);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 12px;
+    padding-right: 12px;
+    margin-bottom: 8px;
+}
+
+.cw-card__heading {
+    -unity-font-style: bold;
+    font-size: 12px;
+    color: var(--cw-ink);
+    margin-bottom: 8px;
+}
+
+/* A card carrying its own heading row, so a status chip can sit opposite the name. */
+.cw-card__head {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.cw-card__head .cw-card__heading {
+    margin-bottom: 0;
+    flex-grow: 1;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Rows: a fixed label column so every value in the window lines up down one edge.
+   ------------------------------------------------------------------------------------------------ */
+.cw-row {
+    flex-direction: row;
+    align-items: center;
+    min-height: 18px;
+}
+
+.cw-row__label {
+    width: 96px;
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--cw-ink-dim);
+}
+
+.cw-row__value {
+    flex-grow: 1;
+    font-size: 11px;
+    color: var(--cw-ink);
+    white-space: normal;
+}
+
+/* A value that is a path: same size, quieter, and selectable so it can be copied out.
+
+   It does NOT wrap, and that is the point. A Windows path is a single unbroken token - no spaces, so no
+   break opportunity - which means `white-space: normal` cannot wrap it and the text spills out of the
+   element box and over whatever is drawn next. Clipping with an ellipsis keeps a long path inside its own
+   row; the card's own button opens the file for anyone who needs the whole thing. */
+.cw-path {
+    font-size: 10px;
+    color: var(--cw-ink-faint);
+    background-color: rgba(0, 0, 0, 0);
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    padding-left: 0;
+    margin-left: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Status chip. Bronze is the accent, so connected is bronze rather than a green borrowed from
+   outside the palette; the warn and faint roles carry the other two states.
+   ------------------------------------------------------------------------------------------------ */
+.cw-chip {
+    font-size: 10px;
+    -unity-font-style: bold;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-top-left-radius: 9px;
+    border-top-right-radius: 9px;
+    border-bottom-left-radius: 9px;
+    border-bottom-right-radius: 9px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+}
+
+.cw-chip--on {
+    color: var(--cw-ok);
+    background-color: var(--cw-ok-wash);
+    border-left-color: var(--cw-ok);
+    border-right-color: var(--cw-ok);
+    border-top-color: var(--cw-ok);
+    border-bottom-color: var(--cw-ok);
+}
+
+.cw-chip--warn {
+    color: var(--cw-warn);
+    background-color: var(--cw-warn-wash);
+    border-left-color: var(--cw-warn);
+    border-right-color: var(--cw-warn);
+    border-top-color: var(--cw-warn);
+    border-bottom-color: var(--cw-warn);
+}
+
+.cw-chip--off {
+    color: var(--cw-alert);
+    background-color: var(--cw-alert-wash);
+    border-left-color: var(--cw-alert);
+    border-right-color: var(--cw-alert);
+    border-top-color: var(--cw-alert);
+    border-bottom-color: var(--cw-alert);
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Buttons. Every interactive surface gets a hover of its own: one without keeps the editor's, which
+   was picked for a dark skin and lands as a bruise on leather.
+   ------------------------------------------------------------------------------------------------ */
+/* The strip pulls its own right margin back by one button gap, so the row ends flush with the card.
+   UI Toolkit has no last-child selector and warns on every stylesheet load when asked for one, so the
+   trailing gap is cancelled here instead - the same trick the inspector examples use. */
+.cw-actions {
+    flex-direction: row;
+    margin-top: 8px;
+    margin-right: -5px;
+}
+
+.cw-button {
+    height: 24px;
+    font-size: 11px;
+    color: var(--cw-ink);
+    background-color: var(--cw-bone);
+    border-left-color: var(--cw-bone-line);
+    border-right-color: var(--cw-bone-line);
+    border-top-color: var(--cw-bone-line);
+    border-bottom-color: var(--cw-bone-line);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-left: 0;
+    margin-right: 5px;
+    flex-grow: 1;
+}
+
+.cw-button:hover {
+    background-color: var(--cw-bronze-wash);
+    border-left-color: var(--cw-bronze-soft);
+    border-right-color: var(--cw-bronze-soft);
+    border-top-color: var(--cw-bronze-soft);
+    border-bottom-color: var(--cw-bronze-soft);
+}
+
+/* A disabled button must lose its EDGE as well as its ink. The accent and state modifiers paint the
+   border, and greying only the text leaves a lit bronze or red edge around a control that cannot be
+   pressed - which reads as available and is the reason the card's state was unreadable at a glance.
+   This rule outranks a bare modifier, so it is the one place the neutral edge has to be restored. */
+.cw-button:disabled {
+    color: var(--cw-ink-faint);
+    background-color: var(--cw-bone-sunk);
+    border-left-color: var(--cw-bone-line);
+    border-right-color: var(--cw-bone-line);
+    border-top-color: var(--cw-bone-line);
+    border-bottom-color: var(--cw-bone-line);
+    opacity: 1;
+}
+
+/* The one call to action per card carries the accent on its edge, never as a fill. */
+.cw-button--primary {
+    border-left-color: var(--cw-bronze);
+    border-right-color: var(--cw-bronze);
+    border-top-color: var(--cw-bronze);
+    border-bottom-color: var(--cw-bronze);
+    color: var(--cw-bronze-deep);
+}
+
+/* Destructive, and filled rather than outlined: state carried on an edge is invisible next to five other
+   outlined buttons in the same row, which is the whole reason this row could not be read at a glance. The
+   fill is spent only while the button can actually destroy something - an always-red Remove is a warning
+   the eye stops seeing. It repeats itself under :hover because `.cw-button:hover` outranks a bare modifier
+   and would otherwise wash the fill back to bronze on the one button that must not look inviting. A
+   disabled Remove falls through to the grey rule above, which is the honest look for a button with nothing
+   to remove. */
+.cw-button--danger {
+    background-color: var(--cw-alert);
+    color: var(--cw-bone-raised);
+    border-left-color: var(--cw-alert);
+    border-right-color: var(--cw-alert);
+    border-top-color: var(--cw-alert);
+    border-bottom-color: var(--cw-alert);
+}
+
+.cw-button--danger:hover {
+    background-color: var(--cw-alert-deep);
+    color: var(--cw-bone-raised);
+    border-left-color: var(--cw-alert-deep);
+    border-right-color: var(--cw-alert-deep);
+    border-top-color: var(--cw-alert-deep);
+    border-bottom-color: var(--cw-alert-deep);
+}
+
+/* The other half of the pair: filled green while Connect has something to do, and carried only while it
+   does. Together with the grey disabled rule a card answers in one glance - green means act, red means
+   destroy, grey means nothing to do here. */
+.cw-button--ok {
+    background-color: var(--cw-ok);
+    color: var(--cw-bone-raised);
+    border-left-color: var(--cw-ok);
+    border-right-color: var(--cw-ok);
+    border-top-color: var(--cw-ok);
+    border-bottom-color: var(--cw-ok);
+}
+
+.cw-button--ok:hover {
+    background-color: var(--cw-ok-deep);
+    color: var(--cw-bone-raised);
+    border-left-color: var(--cw-ok-deep);
+    border-right-color: var(--cw-ok-deep);
+    border-top-color: var(--cw-ok-deep);
+    border-bottom-color: var(--cw-ok-deep);
+}
+
+/* Fixed-width actions that should not stretch with the row. */
+.cw-button--compact {
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Notes: quiet explanatory copy, and the alert variant for something the user must act on.
+   ------------------------------------------------------------------------------------------------ */
+.cw-note {
+    font-size: 11px;
+    color: var(--cw-ink-dim);
+    white-space: normal;
+}
+
+.cw-note--tight {
+    font-size: 10px;
+    color: var(--cw-ink-faint);
+    margin-top: 6px;
+}
+
+.cw-divider {
+    height: 1px;
+    background-color: var(--cw-bone-line);
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+/* History uses the same field colours and spacing as the surrounding cards. */
+.cw-history-usage {
+    margin-top: 10px;
+    margin-bottom: 4px;
+    color: var(--cw-ink);
+}
+
+.cw-history-slider {
+    margin-left: 0;
+    margin-right: 0;
+    min-height: 26px;
+    color: var(--cw-ink);
+}
+
+.cw-history-slider .unity-base-field__label {
+    min-width: 122px;
+    color: var(--cw-ink-dim);
+    font-size: 11px;
+}
+
+.cw-history-slider .unity-base-slider__input {
+    min-width: 100px;
+    flex-grow: 1;
+}
+
+.cw-history-slider .unity-base-slider__tracker {
+    background-color: var(--cw-bone-line);
+}
+
+.cw-history-slider .unity-base-slider__dragger {
+    background-color: var(--cw-bronze);
+    border-left-color: var(--cw-bronze-deep);
+    border-right-color: var(--cw-bronze-deep);
+    border-top-color: var(--cw-bronze-deep);
+    border-bottom-color: var(--cw-bronze-deep);
+}
+
+.cw-history-slider .unity-base-slider__dragger:hover {
+    background-color: var(--cw-bronze-deep);
+}
+
+.cw-history-slider .unity-base-text-field__input {
+    background-color: var(--cw-bone);
+    color: var(--cw-ink);
+    border-left-color: var(--cw-bone-line);
+    border-right-color: var(--cw-bone-line);
+    border-top-color: var(--cw-bone-line);
+    border-bottom-color: var(--cw-bone-line);
+}
+
+.cw-history-slider .unity-base-text-field__input:hover,
+.cw-history-slider .unity-base-text-field__input:focus {
+    background-color: var(--cw-bronze-wash);
+    border-left-color: var(--cw-bronze-soft);
+    border-right-color: var(--cw-bronze-soft);
+    border-top-color: var(--cw-bronze-soft);
+    border-bottom-color: var(--cw-bronze-soft);
+}

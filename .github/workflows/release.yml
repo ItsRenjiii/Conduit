@@ -1,0 +1,61 @@
+name: Release
+
+# Pushing a version tag such as v1.2.0 publishes that version: the package zip VCC installs and the
+# package.json the ItsRenjiLabs listing reads, attached to a GitHub Release whose notes are that
+# version's CHANGELOG.md section. Every third-party action is pinned to a full commit SHA, so an
+# upstream release can never change what this workflow runs.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Read and check the version
+        id: version
+        run: |
+          name=$(jq -r .name package.json)
+          version=$(jq -r .version package.json)
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $version."
+            exit 1
+          fi
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "zip=$name-$version.zip" >> "$GITHUB_OUTPUT"
+
+      - name: Extract release notes
+        run: |
+          awk -v v="${{ steps.version.outputs.version }}" '
+            $0 ~ "^## " v "( |$)" { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "::error::CHANGELOG.md has no section for ${{ steps.version.outputs.version }}."
+            exit 1
+          fi
+
+      - name: Zip the package
+        run: |
+          zip -r -X "${{ steps.version.outputs.zip }}" . \
+            -x ".git/*" ".github/*" ".gitattributes" "release-notes.md"
+
+      - name: Publish the release
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          name: Conduit ${{ steps.version.outputs.version }}
+          body_path: release-notes.md
+          fail_on_unmatched_files: true
+          files: |
+            ${{ steps.version.outputs.zip }}
+            package.json

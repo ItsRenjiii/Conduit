@@ -1,0 +1,30 @@
+{
+  "name": "com.itsrenji.conduit",
+  "displayName": "Conduit",
+  "version": "1.0.0",
+  "unity": "2022.3",
+  "description": "MCP-native Unity bridge that gives AI coding agents the whole editor, UdonSharp and the VRChat SDK: author, inspect, compile, test, validate, build and launch without leaving the agent session.",
+  "author": {
+    "name": "ItsRenji",
+    "url": "https://github.com/ItsRenjiii"
+  },
+  "license": "LicenseRef-PolyForm-Shield-1.0.0",
+  "licensesUrl": "https://github.com/ItsRenjiii/Conduit/blob/main/LICENSE.md",
+  "changelogUrl": "https://github.com/ItsRenjiii/Conduit/blob/main/CHANGELOG.md",
+  "documentationUrl": "https://github.com/ItsRenjiii/Conduit#readme",
+  "keywords": ["mcp", "ai", "agent", "vrchat", "udonsharp", "editor"],
+  "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "3.2.1"
+  },
+  "vpmDependencies": {},
+  "legacyFolders": {
+    "Assets\\ItsRenji\\Conduit": "728831404a3d9af40af4717d2be68324"
+  },
+  "samples": [
+    {
+      "displayName": "Examples",
+      "description": "UI Toolkit inspector framework with demos, plus UdonSharp patterns for sync, security, interaction, movement, persistence and contacts. Each file carries its own reuse licence.",
+      "path": "Samples~/Examples"
+    }
+  ]
+}

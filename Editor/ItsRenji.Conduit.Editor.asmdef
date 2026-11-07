@@ -1,0 +1,26 @@
+{
+    "name": "ItsRenji.Conduit.Editor",
+    "rootNamespace": "ItsRenji.Conduit",
+    "references": [
+        "Newtonsoft.Json",
+        "Unity.ProBuilder",
+        "Unity.ProBuilder.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.probuilder",
+            "expression": "",
+            "define": "CONDUIT_PROBUILDER"
+        }
+    ],
+    "noEngineReferences": false
+}

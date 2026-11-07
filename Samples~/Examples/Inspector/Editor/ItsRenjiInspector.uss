@@ -1,0 +1,1329 @@
+/*
+Copyright (c) 2026 ItsRenji. All rights reserved.
+Licensed for unmodified redistribution only. See the ItsRenji licence header carried by the C# sources.
+*/
+
+/* ------------------------------------------------------------------------------------------------
+   Bone and ink.
+
+   The panel is cut from two materials and nothing else. A night roof across the top, scattered with
+   hard single-pixel stars, and cream leather below it holding every field. Bronze is the only accent,
+   used the way veneer and piping are used: edges, one line, never a surface.
+
+   No glow anywhere. A soft falloff into a dark ground bands into visible rings on an eight bit
+   display, which is why the stars are hard points and the night has no vignette.
+
+   Every colour comes from the block below, so a change of palette is one edit.
+   ------------------------------------------------------------------------------------------------ */
+:root {
+    /* Night: the roof. Warm, never pure black. */
+    --ir-night: rgb(16, 14, 12);
+    --ir-night-edge: rgb(38, 33, 27);
+    --ir-night-ink: rgb(163, 154, 141);
+
+    /* Leather: the cream everything is read off. */
+    --ir-bone: rgb(242, 237, 228);
+    --ir-bone-raised: rgb(249, 246, 240);
+    --ir-bone-sunk: rgb(232, 226, 214);
+    --ir-bone-line: rgb(215, 207, 193);
+
+    /* Ink. */
+    --ir-ink: rgb(35, 32, 28);
+    --ir-ink-dim: rgb(85, 80, 74);
+    --ir-ink-faint: rgb(139, 132, 122);
+
+    /* Veneer: the only accent. */
+    --ir-bronze: rgb(138, 110, 69);
+    --ir-bronze-deep: rgb(107, 86, 55);
+    --ir-bronze-soft: rgb(196, 170, 129);
+    --ir-bronze-wash: rgb(236, 229, 214);
+
+    /* State. */
+    --ir-alert: rgb(183, 38, 30);
+    --ir-alert-wash: rgb(246, 234, 231);
+    --ir-warn: rgb(154, 91, 46);
+    --ir-warn-wash: rgb(248, 238, 226);
+
+    /* ----------------------------------------------------------------------------------------------
+       Roles. The block above says what the colours ARE; this one says what they are FOR, and every
+       structural rule below reads a role rather than a colour. Taken from the reference sheet, which
+       keeps its whole skin in a block this size and swaps it per editor theme.
+
+       The one that matters most is the hover. An interactive surface with no hover of its own keeps
+       the editor's, and the editor's was chosen for a dark skin, so it lands as a bruise on leather.
+       Every surface that reacts to a pointer reads this role, and none of them pick a colour.
+       ---------------------------------------------------------------------------------------------- */
+    --ir-role-border: rgb(215, 207, 193);
+    --ir-role-header: rgb(232, 226, 214);
+    --ir-role-content: rgb(249, 246, 240);
+    --ir-role-hover: rgb(236, 229, 214);
+    --ir-role-fold-line: rgb(215, 207, 193);
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Root: the night the whole panel sits on, starfield and all. The tile is set from code because it is
+   drawn rather than shipped as art. Cards are then the only lit surfaces in the panel, which is what
+   makes them read as leather lying ON something rather than as the panel itself.
+   ------------------------------------------------------------------------------------------------ */
+.ir-root {
+    background-color: var(--ir-night);
+    background-repeat: repeat;
+    background-size: auto;
+    color: var(--ir-night-ink);
+    padding-top: 0;
+    padding-bottom: 10px;
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Header: the roof. It carries no ground and no closing rule of its own now that the root is the
+   night, because a rule drawn between two stretches of the same night reads as a scratch rather than
+   as a seam. The negative margins widen it past the root's padding, which is what the masthead
+   panel's own inset is measured from, and it closes on the same gap the cards keep between
+   themselves so the first card is no further away than any other pair.
+   ------------------------------------------------------------------------------------------------ */
+.ir-masthead {
+    margin-top: 0;
+    margin-bottom: 9px;
+    margin-left: -6px;
+    margin-right: -6px;
+    padding-bottom: 0;
+}
+
+.ir-header {
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0);
+    padding-top: 18px;
+    padding-bottom: 14px;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.ir-header__logo {
+    width: 210px;
+    height: 118px;
+    margin-bottom: 4px;
+    --unity-image-tint-color: rgb(255, 255, 255);
+}
+
+.ir-header__title {
+    color: var(--ir-bone);
+    font-size: 15px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    -unity-text-align: middle-center;
+}
+
+.ir-header__subtitle {
+    color: var(--ir-bronze-soft);
+    font-size: 11px;
+    -unity-text-align: middle-center;
+    margin-top: 3px;
+    white-space: normal;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Masthead: the panel under the roof, holding the headline settings and the navigation that
+   switches everything below it.
+   ------------------------------------------------------------------------------------------------ */
+/* Sits on the night with the stars showing round it, rather than on the leather below. The inset
+   matches the root's own padding rather than the cards' zero margin, because the roof this panel sits
+   in bleeds that padding back off again, so the two land on the same line down the panel. */
+.ir-chrome {
+    margin-left: 6px;
+    margin-right: 6px;
+    margin-bottom: 0;
+}
+
+.ir-chrome .ir-tabs {
+    margin-top: 10px;
+    margin-bottom: 0;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Tabs: cut into the leather, the live one marked by a bronze rule.
+   ------------------------------------------------------------------------------------------------ */
+.ir-tabs {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--ir-bone-line);
+}
+
+.ir-tab {
+    background-color: rgba(0, 0, 0, 0);
+    background-image: none;
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(0, 0, 0, 0);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    margin-top: 0;
+    margin-bottom: -1px;
+    margin-left: 0;
+    margin-right: 0;
+    padding-top: 5px;
+    padding-bottom: 6px;
+    padding-left: 12px;
+    padding-right: 12px;
+    color: var(--ir-ink-faint);
+    font-size: 11px;
+    -unity-font-style: bold;
+    transition-property: background-color;
+    transition-duration: 120ms;
+}
+
+.ir-tab:hover {
+    color: var(--ir-ink);
+    background-color: var(--ir-bone-sunk);
+}
+
+/* The live tab is restated against the pointer states, and must sit AFTER the hover rule above: a
+   class plus a pseudo-class weighs the same as the bare hover rule, and USS gives a tie to whichever
+   comes last, so written the other way round the mark is lost under the pointer that just set it.
+   The mark deliberately has no transition, because the paint that reveals it is asked for once. */
+.ir-tab--active,
+.ir-tab--active:hover,
+.ir-tab--active:focus,
+.ir-tab--active:active {
+    color: var(--ir-bronze-deep);
+    border-bottom-color: var(--ir-bronze);
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Card: a panel of leather, seamed with a hairline.
+   ------------------------------------------------------------------------------------------------ */
+.ir-card {
+    background-color: var(--ir-bone-raised);
+    color: var(--ir-ink);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: var(--ir-bone-line);
+    border-right-color: var(--ir-bone-line);
+    border-top-color: var(--ir-bone-line);
+    border-bottom-color: var(--ir-bone-line);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    padding-top: 9px;
+    padding-bottom: 11px;
+    padding-left: 11px;
+    padding-right: 11px;
+    margin-bottom: 9px;
+    transition-property: border-color;
+    transition-duration: 120ms;
+}
+
+.ir-card:hover {
+    border-left-color: var(--ir-bronze-soft);
+    border-right-color: var(--ir-bronze-soft);
+    border-top-color: var(--ir-bronze-soft);
+    border-bottom-color: var(--ir-bronze-soft);
+}
+
+/* A card inside another sinks rather than lifts, so the two never stack into a brighter block. */
+.ir-card .ir-card {
+    background-color: var(--ir-bone-sunk);
+    margin-top: 7px;
+}
+
+.ir-card__heading {
+    color: var(--ir-bronze-deep);
+    font-size: 11px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Fold: a card whose heading is the catch. The chevron is a rotated corner rather than a glyph, so
+   it stays crisp at any editor scale and needs no font that carries the character.
+   ------------------------------------------------------------------------------------------------ */
+.ir-fold__head {
+    flex-direction: row;
+    align-items: center;
+    padding-top: 2px;
+    padding-bottom: 3px;
+    padding-left: 4px;
+    margin-left: -4px;
+    margin-right: -4px;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+}
+
+/* The catch is the clickable part of a fold, so it reacts like the reference's group header does. */
+.ir-fold__head:hover {
+    background-color: var(--ir-role-hover);
+}
+
+.ir-fold__chevron {
+    width: 6px;
+    height: 6px;
+    margin-right: 9px;
+    margin-left: 2px;
+    margin-bottom: 3px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-right-color: var(--ir-bronze);
+    border-bottom-color: var(--ir-bronze);
+    rotate: 45deg;
+    transition-property: rotate;
+    transition-duration: 120ms;
+}
+
+.ir-fold--closed .ir-fold__chevron {
+    rotate: -45deg;
+}
+
+.ir-fold__title {
+    margin-bottom: 0;
+}
+
+.ir-fold--closed {
+    padding-bottom: 9px;
+}
+
+.ir-fold__content {
+    margin-top: 8px;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Row: fields side by side. The strip pulls its own right margin back so the last child lines up
+   with everything above it, which USS cannot do with a last-child selector.
+   ------------------------------------------------------------------------------------------------ */
+.ir-row {
+    flex-direction: row;
+    margin-right: -6px;
+}
+
+.ir-row > .ir-block {
+    flex-grow: 1;
+    flex-basis: 0;
+    margin-right: 6px;
+}
+
+.ir-row .unity-base-field__label {
+    min-width: 0;
+    width: auto;
+    flex-basis: auto;
+    flex-shrink: 0;
+    margin-right: 6px;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Blocks and separators. The accent stripe is the contrast piping.
+   ------------------------------------------------------------------------------------------------ */
+.ir-block--disabled {
+    opacity: 0.45;
+}
+
+.ir-block--accent {
+    border-left-width: 2px;
+    border-left-color: var(--ir-bronze);
+    padding-left: 8px;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+.ir-divider {
+    height: 1px;
+    background-color: var(--ir-bone-line);
+    margin-top: 10px;
+    margin-bottom: 8px;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Title: a section break inside a card, louder than an eyebrow.
+   ------------------------------------------------------------------------------------------------ */
+.ir-title {
+    color: var(--ir-ink);
+    font-size: 13px;
+    -unity-font-style: bold;
+    margin-top: 8px;
+    margin-bottom: 2px;
+}
+
+.ir-title__line {
+    height: 1px;
+    background-color: var(--ir-bone-line);
+    margin-bottom: 6px;
+}
+
+/* A message and the action offered beside it, on one line. */
+.ir-notice {
+    flex-direction: row;
+    align-items: center;
+}
+
+.ir-notice > .ir-note,
+.ir-notice > .ir-warn,
+.ir-notice > .ir-alert {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+/* A value the behaviour reports, shown as text with no control around it. */
+.ir-readout {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+.ir-readout__value {
+    flex-grow: 1;
+    color: var(--ir-ink-faint);
+    -unity-font-style: italic;
+}
+
+/* A struct opened straight into the card sheds the fold it would otherwise sit behind. */
+.ir-field--inline .unity-foldout__toggle {
+    display: none;
+}
+
+.ir-field--inline .unity-foldout__content {
+    margin-left: 0;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Eyebrow: opens a run of fields without spending a whole card.
+   ------------------------------------------------------------------------------------------------ */
+.ir-eyebrow {
+    color: var(--ir-bronze);
+    font-size: 9px;
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+    margin-top: 8px;
+    margin-bottom: 3px;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Note, warning and alert: three washes on the same leather, each with its own rule down the left.
+   ------------------------------------------------------------------------------------------------ */
+.ir-note {
+    color: var(--ir-ink-dim);
+    font-size: 11px;
+    white-space: normal;
+    padding-top: 5px;
+    padding-bottom: 6px;
+    padding-left: 9px;
+    padding-right: 9px;
+    margin-bottom: 5px;
+    background-color: var(--ir-bronze-wash);
+    border-left-width: 2px;
+    border-left-color: var(--ir-bronze-soft);
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+.ir-warn {
+    color: var(--ir-warn);
+    font-size: 11px;
+    white-space: normal;
+    padding-top: 5px;
+    padding-bottom: 6px;
+    padding-left: 9px;
+    padding-right: 9px;
+    margin-bottom: 5px;
+    background-color: var(--ir-warn-wash);
+    border-left-width: 2px;
+    border-left-color: var(--ir-warn);
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+.ir-alert {
+    color: var(--ir-alert);
+    font-size: 11px;
+    white-space: normal;
+    padding-top: 5px;
+    padding-bottom: 6px;
+    padding-left: 9px;
+    padding-right: 9px;
+    margin-top: 2px;
+    margin-bottom: 5px;
+    background-color: var(--ir-alert-wash);
+    border-left-width: 2px;
+    border-left-color: var(--ir-alert);
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Progress: a tool reporting real work inside the panel. Unity's own progress bar is MODAL, so it
+   locks the whole editor while a generator runs, which is the thing async work exists to avoid.
+   ------------------------------------------------------------------------------------------------ */
+.ir-progress {
+    margin-top: 4px;
+    margin-bottom: 6px;
+}
+
+.ir-progress__label {
+    color: var(--ir-ink-dim);
+    font-size: 11px;
+    white-space: normal;
+    margin-bottom: 4px;
+}
+
+.ir-progress__track {
+    height: 6px;
+    border-radius: 3px;
+    background-color: var(--ir-bronze-wash);
+    overflow: hidden;
+}
+
+.ir-progress__fill {
+    height: 6px;
+    border-radius: 3px;
+    background-color: var(--ir-bronze);
+}
+
+.ir-field {
+    margin-bottom: 1px;
+}
+
+.ir-field--missing {
+    background-color: var(--ir-alert-wash);
+    border-left-width: 2px;
+    border-left-color: var(--ir-alert);
+    padding-left: 4px;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+
+.ir-field--readonly {
+    opacity: 0.7;
+}
+
+.ir-field--nolabel .unity-base-field__label {
+    display: none;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Field line: the control plus whatever shares its row.
+   ------------------------------------------------------------------------------------------------ */
+.ir-line {
+    flex-direction: row;
+    align-items: center;
+}
+
+.ir-line__field {
+    flex-grow: 1;
+}
+
+/* The unit sits over the right-hand end of the field, not beside it, so it costs the value no width.
+   It ignores picking, or it would eat the clicks meant for the field underneath. */
+.ir-unit {
+    position: relative;
+    flex-grow: 1;
+}
+
+.ir-unit__suffix {
+    position: absolute;
+    right: 5px;
+    top: 0;
+    bottom: 0;
+    -unity-text-align: middle-right;
+    color: var(--ir-ink-faint);
+    font-size: 10px;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Choices: a whole number drawn as one strip of buttons.
+   ------------------------------------------------------------------------------------------------ */
+.ir-choices {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+.ir-choices__strip {
+    flex-direction: row;
+    flex-grow: 1;
+    flex-wrap: wrap;
+}
+
+.ir-choice {
+    background-color: var(--ir-bone);
+    background-image: none;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: var(--ir-bone-line);
+    border-right-color: var(--ir-bone-line);
+    border-top-color: var(--ir-bone-line);
+    border-bottom-color: var(--ir-bone-line);
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    color: var(--ir-ink-dim);
+    font-size: 11px;
+    padding-top: 3px;
+    padding-bottom: 4px;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-top: 1px;
+    margin-bottom: 1px;
+    margin-left: 0;
+    margin-right: 4px;
+    transition-property: border-color, background-color, color;
+    transition-duration: 110ms;
+}
+
+.ir-choice:hover {
+    color: var(--ir-ink);
+    border-left-color: var(--ir-bronze-soft);
+    border-right-color: var(--ir-bronze-soft);
+    border-top-color: var(--ir-bronze-soft);
+    border-bottom-color: var(--ir-bronze-soft);
+}
+
+/* Restated against hover. The reference scopes its hover to a non-active modifier so the two can
+   never meet; the same end is reached here by restating the live state after the hover rule, because
+   a class and a pseudo-class weigh the same and USS hands a tie to whichever is written last. Every
+   state class in this sheet that a bare :hover would outrank is restated the same way. */
+.ir-choice--active,
+.ir-choice--active:hover {
+    background-color: var(--ir-bronze);
+    color: var(--ir-bone-raised);
+    -unity-font-style: bold;
+    border-left-color: var(--ir-bronze-deep);
+    border-right-color: var(--ir-bronze-deep);
+    border-top-color: var(--ir-bronze-deep);
+    border-bottom-color: var(--ir-bronze-deep);
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Range: the low number, the two-handled slider, then the high number.
+   ------------------------------------------------------------------------------------------------ */
+.ir-range {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+.ir-range__body {
+    flex-direction: row;
+    align-items: center;
+    flex-grow: 1;
+    margin-right: -2px;
+}
+
+.ir-range__value {
+    width: 50px;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.ir-range__slider {
+    flex-grow: 1;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Table: one array down the left, a column per companion array, a delete on each row and an add
+   underneath. The columns are fixed width so the headings sit over the cells they name.
+   ------------------------------------------------------------------------------------------------ */
+.ir-table {
+    margin-top: 3px;
+    margin-bottom: 3px;
+}
+
+.ir-table__caption {
+    color: var(--ir-ink-dim);
+    font-size: 11px;
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+}
+
+.ir-table__head {
+    flex-direction: row;
+    align-items: center;
+    padding-bottom: 3px;
+    margin-bottom: 3px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--ir-bone-line);
+}
+
+.ir-table__head .ir-table__spine,
+.ir-table__head .ir-table__cell {
+    color: var(--ir-bronze-deep);
+    font-size: 10px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    -unity-text-align: middle-center;
+}
+
+.ir-table__head .ir-table__spine {
+    -unity-text-align: middle-left;
+}
+
+.ir-table__row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 2px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    transition-property: background-color;
+    transition-duration: 110ms;
+}
+
+.ir-table__row:hover {
+    background-color: var(--ir-bone-sunk);
+}
+
+.ir-table__spine {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 90px;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.ir-table__cell {
+    width: 68px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+}
+
+.ir-table__toggle {
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.ir-table__remove {
+    width: 26px;
+    min-width: 26px;
+    flex-shrink: 0;
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: 4px;
+    margin-top: 0;
+    margin-bottom: 0;
+    -unity-text-align: middle-center;
+}
+
+.ir-table__remove:hover {
+    border-left-color: var(--ir-alert);
+    border-right-color: var(--ir-alert);
+    border-top-color: var(--ir-alert);
+    border-bottom-color: var(--ir-alert);
+    color: var(--ir-alert);
+}
+
+.ir-table__add {
+    align-self: flex-start;
+    margin-top: 6px;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Previews. A rendered mesh and an asset thumbnail are both dark images, so they sit in a night well
+   rather than on the leather: the same two materials, the other way up.
+   ------------------------------------------------------------------------------------------------ */
+.ir-stage {
+    background-color: var(--ir-night);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: var(--ir-night-edge);
+    border-right-color: var(--ir-night-edge);
+    border-top-color: var(--ir-night-edge);
+    border-bottom-color: var(--ir-night-edge);
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 4px;
+    padding-right: 4px;
+    overflow: hidden;
+}
+
+.ir-stage--editor {
+    background-color: var(--ir-bone-sunk);
+    border-left-color: var(--ir-bone-line);
+    border-right-color: var(--ir-bone-line);
+    border-top-color: var(--ir-bone-line);
+    border-bottom-color: var(--ir-bone-line);
+    color: var(--ir-ink);
+    padding-top: 7px;
+    padding-bottom: 9px;
+    padding-left: 9px;
+    padding-right: 9px;
+}
+
+.ir-thumbnail {
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-left: 4px;
+    background-color: var(--ir-night);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: var(--ir-night-edge);
+    border-right-color: var(--ir-night-edge);
+    border-top-color: var(--ir-night-edge);
+    border-bottom-color: var(--ir-night-edge);
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.ir-thumbnail__art {
+    flex-grow: 1;
+    width: 100%;
+    height: 100%;
+}
+
+/* This label sits in a night well, not on the leather, so it takes the light ink. */
+.ir-thumbnail__empty {
+    color: var(--ir-night-ink);
+    font-size: 10px;
+    -unity-text-align: middle-center;
+}
+
+/* The icon, name and kind of an asset drawn by the inline editor. */
+.ir-asset-header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 6px;
+    padding-bottom: 5px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--ir-bone-line);
+}
+
+.ir-asset-header__icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 7px;
+    flex-shrink: 0;
+}
+
+.ir-asset-header__name {
+    color: var(--ir-ink);
+    font-size: 12px;
+    -unity-font-style: bold;
+    flex-grow: 1;
+}
+
+.ir-asset-header__kind {
+    color: var(--ir-ink-faint);
+    font-size: 10px;
+}
+
+.ir-asset-preview {
+    margin-top: 6px;
+    background-color: var(--ir-night);
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+/* A list of assets with a way out to one the list does not hold. */
+.ir-asset-dropdown__slot {
+    margin-left: 14px;
+    margin-top: 2px;
+}
+
+/* The arguments an action collects before it runs, penned in above its button. */
+.ir-arguments {
+    background-color: var(--ir-bone-sunk);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: var(--ir-bone-line);
+    border-right-color: var(--ir-bone-line);
+    border-top-color: var(--ir-bone-line);
+    border-bottom-color: var(--ir-bone-line);
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    padding-left: 9px;
+    padding-right: 9px;
+    margin-top: 5px;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Buttons: leather by default, veneer when they carry the weight.
+   ------------------------------------------------------------------------------------------------ */
+.ir-button {
+    background-color: var(--ir-bone);
+    background-image: none;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: var(--ir-bone-line);
+    border-right-color: var(--ir-bone-line);
+    border-top-color: var(--ir-bone-line);
+    border-bottom-color: var(--ir-bone-line);
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    color: var(--ir-ink-dim);
+    font-size: 11px;
+    -unity-font-style: bold;
+    padding-top: 6px;
+    padding-bottom: 7px;
+    padding-left: 13px;
+    padding-right: 13px;
+    margin-top: 5px;
+    margin-bottom: 2px;
+    margin-left: 0;
+    margin-right: 0;
+    transition-property: border-color, background-color, color;
+    transition-duration: 120ms;
+}
+
+.ir-button:hover {
+    border-left-color: var(--ir-bronze);
+    border-right-color: var(--ir-bronze);
+    border-top-color: var(--ir-bronze);
+    border-bottom-color: var(--ir-bronze);
+    color: var(--ir-bronze-deep);
+}
+
+.ir-button--accent {
+    background-color: var(--ir-bronze);
+    color: var(--ir-bone-raised);
+    border-left-color: var(--ir-bronze-deep);
+    border-right-color: var(--ir-bronze-deep);
+    border-top-color: var(--ir-bronze-deep);
+    border-bottom-color: var(--ir-bronze-deep);
+}
+
+.ir-button--accent:hover {
+    background-color: var(--ir-bronze-deep);
+    color: var(--ir-bone-raised);
+}
+
+.ir-button--checked,
+.ir-button--checked:hover {
+    background-color: var(--ir-bronze);
+    color: var(--ir-bone-raised);
+    border-left-color: var(--ir-bronze-deep);
+    border-right-color: var(--ir-bronze-deep);
+    border-top-color: var(--ir-bronze-deep);
+    border-bottom-color: var(--ir-bronze-deep);
+}
+
+.ir-button--inline {
+    font-size: 10px;
+    padding-top: 3px;
+    padding-bottom: 4px;
+    padding-left: 9px;
+    padding-right: 9px;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 6px;
+    flex-shrink: 0;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Unity's own controls. Left alone they arrive styled for the dark editor and go invisible on cream,
+   so every well, label, tick and arrow is restated here. This block is the price of the light panel.
+   ------------------------------------------------------------------------------------------------ */
+.ir-root .unity-base-field__label {
+    color: var(--ir-ink-dim);
+    font-size: 11px;
+}
+
+.ir-root .unity-base-field:focus .unity-base-field__label {
+    color: var(--ir-bronze-deep);
+}
+
+.ir-root .unity-base-text-field__input,
+.ir-root .unity-object-field__input,
+.ir-root .unity-base-popup-field__input,
+.ir-root .unity-enum-field__input,
+.ir-root .unity-layer-field__input,
+.ir-root .unity-tag-field__input {
+    background-color: var(--ir-bone-raised);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: var(--ir-bone-line);
+    border-right-color: var(--ir-bone-line);
+    border-top-color: var(--ir-bone-line);
+    border-bottom-color: var(--ir-bone-line);
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    color: var(--ir-ink);
+    transition-property: border-color, background-color;
+    transition-duration: 110ms;
+}
+
+.ir-root .unity-base-text-field__input:hover,
+.ir-root .unity-object-field__input:hover,
+.ir-root .unity-base-popup-field__input:hover {
+    border-left-color: var(--ir-bronze-soft);
+    border-right-color: var(--ir-bronze-soft);
+    border-top-color: var(--ir-bronze-soft);
+    border-bottom-color: var(--ir-bronze-soft);
+}
+
+.ir-root .unity-base-text-field__input:focus {
+    background-color: rgb(255, 255, 255);
+    border-left-color: var(--ir-bronze);
+    border-right-color: var(--ir-bronze);
+    border-top-color: var(--ir-bronze);
+    border-bottom-color: var(--ir-bronze);
+}
+
+/* Scoped to the inside of a field on purpose. A blanket rule on every text element also catches the
+   masthead's own title and subtitle, which sit on the night and have to stay light. */
+.ir-root .unity-base-field .unity-text-element {
+    color: var(--ir-ink);
+}
+
+.ir-root .unity-list-view__item .unity-text-element {
+    color: var(--ir-ink);
+}
+
+.ir-root .unity-object-field-display__label {
+    color: var(--ir-ink);
+}
+
+/* The picker button on a reference field arrives at #373737, an editor-skin grey that reads as a hole
+   punched in the leather beside it. Measured on the live tree rather than guessed at. */
+.ir-root .unity-object-field__selector {
+    background-color: var(--ir-role-content);
+    border-left-width: 1px;
+    border-left-color: var(--ir-role-border);
+}
+
+.ir-root .unity-object-field__selector:hover {
+    background-color: var(--ir-role-hover);
+}
+
+/* Unity's own buttons inside a list, which is the add and remove pair under an array. Scoped to the
+   inside of a list on purpose: it cannot reach our own buttons, so it needs no specificity fight with
+   them, and it holds whatever Unity names those buttons in a given version. */
+/* A list arrives with several surfaces of its own, not one: measured on the live window, the empty
+   state paints #464646 inside a #1A1A1A border and the strip carrying the add and remove buttons does
+   the same, which showed as black bands and slivers on the leather. Naming each part would mean naming
+   Unity's internal classes, so the whole subtree is brought onto the panel's surfaces instead. It is
+   safe to be this broad because every rule that needs to win over it - row hover, row selection, the
+   checkmark and its checked state, the scroller - carries a heavier selector and still does. */
+.ir-root .unity-list-view,
+.ir-root .unity-list-view * {
+    background-color: var(--ir-role-content);
+    border-left-color: var(--ir-role-border);
+    border-right-color: var(--ir-role-border);
+    border-top-color: var(--ir-role-border);
+    border-bottom-color: var(--ir-role-border);
+}
+
+.ir-root .unity-list-view {
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+.ir-root .unity-list-view .unity-button {
+    background-image: none;
+    color: var(--ir-ink-dim);
+}
+
+.ir-root .unity-list-view .unity-button:hover {
+    background-color: var(--ir-role-hover);
+    color: var(--ir-ink);
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Colour swatch. Unity's own colour field is an IMGUIContainer inside, and IMGUI paints from the
+   editor's skin, so nothing in this sheet could ever reach it: it stayed a light block with a black
+   hover while the panel around it changed. The inspector draws this instead and hands the click to
+   the same picker Unity would have opened, which is the only way it lands in the palette.
+   ------------------------------------------------------------------------------------------------ */
+.ir-swatch-field {
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
+
+.ir-root .ir-swatch {
+    background-color: var(--ir-role-content);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: var(--ir-role-border);
+    border-right-color: var(--ir-role-border);
+    border-top-color: var(--ir-role-border);
+    border-bottom-color: var(--ir-role-border);
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 2px;
+    padding-right: 2px;
+    min-height: 18px;
+    transition-property: border-color;
+    transition-duration: 110ms;
+}
+
+.ir-root .ir-swatch:hover {
+    border-left-color: var(--ir-bronze-soft);
+    border-right-color: var(--ir-bronze-soft);
+    border-top-color: var(--ir-bronze-soft);
+    border-bottom-color: var(--ir-bronze-soft);
+}
+
+.ir-root .ir-swatch__fill {
+    flex-grow: 1;
+    min-height: 14px;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
+}
+
+/* Unity's checkmark is an OPAQUE sprite carrying the well AND the tick together, so tinting it can
+   only ever darken it: bronze over the dark-editor sprite resolves to a #17120B well with a #7D633E
+   tick, which is the near-black square that showed on the leather. The image is dropped and the two
+   states are drawn instead, an empty well for off and a filled one for on, which owes nothing to the
+   editor skin and stays crisp at any scale. */
+.ir-root .unity-toggle__input > .unity-toggle__checkmark {
+    background-image: none;
+    background-color: var(--ir-bone-raised);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: var(--ir-bone-line);
+    border-right-color: var(--ir-bone-line);
+    border-top-color: var(--ir-bone-line);
+    border-bottom-color: var(--ir-bone-line);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    transition-property: background-color, border-color;
+    transition-duration: 110ms;
+}
+
+/* Checked keeps the well AND shows a tick inside it. Filling the well with the accent colour instead
+   reads as decoration rather than as a control, and replacing the well with a bare tick leaves a
+   toggle that is ON by default looking like nothing at all - neither says "this is a checkbox, and it
+   is ticked". Unity's checkmark is ONE element and UI Toolkit has no ::before, so the tick cannot come
+   from here: it is a real child added in BuildToggle, and this only reveals it. */
+.ir-root .unity-toggle:checked > .unity-toggle__input > .unity-toggle__checkmark {
+    border-left-color: var(--ir-bronze);
+    border-right-color: var(--ir-bronze);
+    border-top-color: var(--ir-bronze);
+    border-bottom-color: var(--ir-bronze);
+}
+
+/* The tick: a rotated corner over the well, the same shape idea as the fold chevron. Positioned
+   absolutely so it never changes the well's size, which is what keeps it out of the fold arrows. */
+.ir-root .ir-tick {
+    position: absolute;
+    display: none;
+    left: 4px;
+    top: 1px;
+    width: 4px;
+    height: 8px;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+    border-right-color: var(--ir-bronze);
+    border-bottom-color: var(--ir-bronze);
+    rotate: 45deg;
+}
+
+.ir-root .unity-toggle:checked .ir-tick {
+    display: flex;
+}
+
+/* The foldout arrow shares the checkmark class, so dropping the image above took the arrow with it.
+   It is drawn back as a rotated corner, the same way the fold heading's own chevron is, which keeps
+   one idea of what a chevron is across the panel. */
+.ir-root .unity-foldout__toggle > .unity-toggle__input > .unity-toggle__checkmark {
+    background-color: rgba(0, 0, 0, 0);
+    width: 6px;
+    height: 6px;
+    margin-left: 3px;
+    margin-right: 7px;
+    margin-bottom: 2px;
+    border-left-width: 0;
+    border-top-width: 0;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-right-color: var(--ir-ink-faint);
+    border-bottom-color: var(--ir-ink-faint);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    rotate: -45deg;
+    transition-property: rotate;
+    transition-duration: 120ms;
+}
+
+/* An open fold is a CHECKED toggle, so the checked rule above reaches its arrow too and would recolour
+   it to the accent while a closed one stayed faint - the arrows changed colour with their own state.
+   This ties with that rule on specificity and is written after it, which is what makes it win. */
+.ir-root .unity-foldout__toggle:checked > .unity-toggle__input > .unity-toggle__checkmark {
+    background-color: rgba(0, 0, 0, 0);
+    border-right-color: var(--ir-ink-faint);
+    border-bottom-color: var(--ir-ink-faint);
+    rotate: 45deg;
+}
+
+.ir-root .unity-foldout__toggle > .unity-toggle__input > .unity-text-element {
+    color: var(--ir-ink-dim);
+    -unity-font-style: bold;
+    font-size: 11px;
+}
+
+/* The foldout block, taken from the reference sheet and recoloured rather than invented. Two fixes
+   for the editor's own defaults, exactly as the reference makes them: the toggle's -12px left margin
+   pulls the arrow out past the text, and its 3px bottom margin stops the head reading as a field. */
+.ir-root .unity-foldout__toggle {
+    margin-left: 3px;
+    margin-bottom: 1px;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+
+/* A fold Unity draws for itself - an array, a struct, a nested group - never got the hover our own
+   fold heads have, so the editor's default showed through instead: picked for a dark skin, it lands
+   as a white square behind the title on a light panel. This gives it the same wash .ir-fold__head
+   uses, so every fold in the panel reacts alike whoever built it. */
+.ir-root .unity-foldout__toggle:hover {
+    background-color: var(--ir-role-hover);
+}
+
+/* The head's own children stay transparent in both states. Whichever of them the editor decides to
+   tint would otherwise paint its rectangle ON TOP of the head's wash, which is the square itself
+   rather than the hover behind it - and the label's box is exactly the size the square appeared. */
+.ir-root .unity-foldout__toggle > .unity-toggle__input,
+.ir-root .unity-foldout__toggle > .unity-toggle__input:hover,
+.ir-root .unity-foldout__toggle > .unity-toggle__input > .unity-text-element,
+.ir-root .unity-foldout__toggle > .unity-toggle__input > .unity-text-element:hover {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+/* The reference gives hover its own palette entry per skin. With none of our own the editor's stays,
+   and that colour was picked for a dark skin, so it lands as a bruise on leather. */
+.ir-root .unity-foldout__toggle:hover,
+.ir-root .unity-foldout__toggle > .unity-toggle__input:hover {
+    background-color: var(--ir-role-hover);
+}
+
+/* The reference's guide line down the open fold, so where a fold ends is never in doubt. The margin
+   goes left and the padding right so the line sits centred under the arrow above it. */
+.ir-root .unity-foldout__content {
+    border-left-width: 1px;
+    border-left-color: var(--ir-bone-line);
+    margin-left: 8px;
+    margin-bottom: 3px;
+    padding-left: 6px;
+}
+
+.ir-root .unity-base-slider__tracker {
+    background-color: var(--ir-bone-sunk);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: var(--ir-bone-line);
+    border-right-color: var(--ir-bone-line);
+    border-top-color: var(--ir-bone-line);
+    border-bottom-color: var(--ir-bone-line);
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
+}
+
+.ir-root .unity-base-slider__dragger {
+    background-color: var(--ir-bronze);
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+/* The halo behind the dragger is Unity's own selection blue at half alpha, the one colour left in the
+   panel that belongs to no palette here. */
+.ir-root .unity-base-slider__dragger-border {
+    background-color: var(--ir-bronze-wash);
+}
+
+.ir-root .unity-list-view__item {
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+/* Same reason as the foldout head: with no hover of our own the editor's dark one shows through. The
+   selected rule is restated against hover and must stay BELOW it, because a class and a pseudo-class
+   weigh the same and USS hands a tie to whichever is written last. */
+.ir-root .unity-collection-view__item:hover {
+    background-color: var(--ir-role-hover);
+}
+
+.ir-root .unity-collection-view__item--selected,
+.ir-root .unity-collection-view__item--selected:hover {
+    background-color: var(--ir-bronze-wash);
+}
+
+.ir-root .unity-scroller .unity-base-slider__dragger {
+    background-color: var(--ir-bone-line);
+}
+
+.ir-root .unity-help-box {
+    background-color: var(--ir-bronze-wash);
+    color: var(--ir-ink-dim);
+}
