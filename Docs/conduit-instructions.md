@@ -6,7 +6,8 @@ engineer wrote all of it. This is about form and rigour, not architecture - matc
 the conventions already present in the files you touch.
 
 **Conduit's own source verbs are the PROTECTED path, and nothing else is.** Every write through
-`udon-batch-edit` and `script-update-or-create` is versioned as it happens, and `file-history` and
+`udon-batch-edit`, `script-update-or-create`, `shader-batch-edit` and `shader-update-or-create` is
+versioned as it happens, and `file-history` and
 `file-restore` read it back or put it back - with the time, the operation and which agent made it. A
 shell redirect or a native write leaves no version at all: Unity never held the previous bytes, so once
 they are overwritten nothing anywhere can recover them. Reach for the verb because it is the only write
@@ -84,8 +85,10 @@ under it.
    has already cost a compile per edit and then a manual domain reload per multi-file change: that
    preference exists to stop SHELL round-trips (`sed -i`, heredocs, `>` redirection) silently changing
    line endings and encoding, and `udon-batch-edit` is byte-exact with all-or-nothing rollback, so it
-   SERVES that intent instead of breaking it. Shell and native tools stay correct for READING code and for non-script
-   files, these documents included.
+   SERVES that intent instead of breaking it. **Shader sources (`.shader`, `.hlsl`, `.cginc`, `.compute`) go
+   through `shader-batch-edit` and `shader-update-or-create` the same way**, and unlike the script verbs those
+   work in Play Mode and return the shader compiler's verdict. Shell and native tools stay correct for READING
+   code and for other non-script files, these documents included.
    (`conduit-compile-console.md` owns the verb and its constraints; `conduit-udonsharp.md` owns what a U#
    script may contain.)
 7. **⛔ A COMMENT THAT NO LONGER MATCHES THE CODE IS A BUG, AND IT SHIPS.** Every logic change updates the

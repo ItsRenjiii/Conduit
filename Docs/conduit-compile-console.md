@@ -270,10 +270,13 @@ To verify, read the console.
   points here, because deleting the script alone orphans the program asset. The pair is matched on the
   program asset's own `sourceCsScript` link, NOT on a same-name convention, so plain C# - MonoBehaviours,
   editor scripts - has no pair and deletes straight through `assets-delete` as normal.
-- **Editing a `.shader` or `.hlsl` needs NO compile trigger and NO play-mode exit.** Unity hot-reloads
-  shader source on save, live, while play mode is running - do NOT `reimport`, do NOT stop play, and do
-  NOT re-enter play to see the change. Shaders are the ONE asset class where a mid-play edit is correct,
-  which makes iterating a shader against a running scene effectively instant.
-- **Shader imports emit no success message.** After `console-clear-logs` -> import/refresh -> idle, an
-  empty console IS the positive verdict. Failures do emit errors. Do not wait for or invent a shader
-  "compiled successfully" line that Unity never produces.
+- **Edit shader sources with `shader-batch-edit` and write them with `shader-update-or-create`; their
+  verdict is final.** They need NO compile trigger and NO play-mode exit: a shader hot-reloads into the
+  running scene, so a mid-play edit is correct and iterating against a running scene is effectively
+  instant. Do NOT `reimport`, stop play, or read the console after one - the verdict already compiled
+  every shader the change reached, for every pass and stage, with no keywords and with each keyword the
+  changed files test.
+- **Unity prints nothing when a shader compiles cleanly, and import alone proves less than it seems.** The
+  import compiles only the variant with no keywords, and a compute shader's kernels compile only on first
+  use, so an empty console after an import is not a verdict on either. That is why the shader verbs
+  compile the variants themselves - never substitute a console read for one.

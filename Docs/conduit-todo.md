@@ -109,21 +109,20 @@ them out and nothing could be built or tested.
 - Next: read each face's or vertex's value before the write and again after `RebuildProBuilderMesh`, and
   report old -> new or already at value, as `gameobject-component-modify` does.
 
-### Wanted: a versioned edit verb for text assets that are not C#
+### Wanted: a versioned edit verb for stylesheets and documents
 
-**Give shaders, includes, stylesheets and documents the same versioned exact-string edit path `.cs` files
-have, so their history lands in Conduit's own pruned store instead of the client's.** `udon-batch-edit` and
-`script-update-or-create` are built around compilation inputs, so a `.shader`, `.hlsl`, `.cginc`, `.uss` or
-`.md` change goes through the client's native file tools, whose checkpoint feature copies the whole file
-into the user's profile drive before every edit and never prunes it.
+**Give `.uss` stylesheets and `.md` documents the same versioned exact-string edit path C# and shader sources
+have, so their history lands in Conduit's own pruned store instead of the client's.** Neither the script
+verbs nor the shader verbs take them, so a `.uss` or `.md` change goes through the client's native file
+tools, whose checkpoint feature copies the whole file into the user's profile drive before every edit and
+never prunes it.
 
 - Observed (Claude Code, 2026-10-17): `C:\Users\<user>\.claude\file-history` held 15.66 GB, of which
   326 copies were one scene file (`VehicleTest.unity`, about 48 MB each); the rest totalled about 100 MB.
   The user keeps client cleanup disabled on purpose, so the client never reclaims it.
-- Next: confirm whether `udon-batch-edit` already accepts these extensions (send one exact-string edit to a
-  scratch `.shader` and read the reply); if it refuses, add the extensions or a sibling verb with the same
-  rules (each file read first, atomic all-or-nothing, version history with pruning, shader reimport rather
-  than a script compile).
+- Next: a sibling verb on the shared batch engine (`RunBatchEdit`) with the same rules - each file read
+  first, atomic all-or-nothing, version history with pruning - and a verdict fitting each kind: a `.uss`
+  import's own errors, and none for a document, which nothing compiles.
 
 ### Wanted: a scene-safe path for the text edits agents make to `.unity` files
 

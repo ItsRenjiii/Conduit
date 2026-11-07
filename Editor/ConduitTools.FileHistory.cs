@@ -1111,7 +1111,15 @@ namespace ItsRenji.Conduit
             if (sections.Length != 3) return "Usage: file-restore <assetPath> | <revision> | <expectedCurrentSha256>";
             string path = NormalizeAssetPath(sections[0]);
             if (!ValidateFileHistoryTarget(path, out string error)) return error;
-            if (EditorApplication.isPlayingOrWillChangePlaymode) return "Refused: exit Play Mode before restoring source.";
+
+            // A shader source compiles on import and hot-reloads, so only C# waits for Play Mode to end.
+            bool isShader = IsShaderSourceFile(path);
+            if (!isShader)
+            {
+                string playModeRefusal = ScriptWriteRefusedInPlayMode("file-restore");
+                if (playModeRefusal != null) return playModeRefusal;
+            }
+
             string revision = Unquote(sections[1]).Trim();
             string expected = Unquote(sections[2]).Trim();
             if (!ConduitFileHistory.IsDigest(expected)) return "Refused: expectedCurrentSha256 must be the exact hash returned by file-history.";
@@ -1148,7 +1156,7 @@ namespace ItsRenji.Conduit
             {
                 if (!ValidateFileHistoryTarget(path, out string pathError)) return pathError;
                 store.CanonicalPath(path);
-                if (EditorApplication.isPlayingOrWillChangePlaymode || !FileHistoryCurrentMatches(path, current))
+                if ((!isShader && EditorApplication.isPlayingOrWillChangePlaymode) || !FileHistoryCurrentMatches(path, current))
                     return "Refused: editor state or target changed during restore preparation. Nothing was written.\n" + report;
                 bool suppressed = path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) && SuppressAutoCompileForBatch();
                 Action releaseHistoryWrite = HoldFileHistoryWrite();
@@ -1161,6 +1169,10 @@ namespace ItsRenji.Conduit
                     return WithFileHistory(new Dictionary<string, byte[]> { [path] = snapshot.Bytes }, "file-restore", after =>
                     {
                         summary += Environment.NewLine + after;
+
+                        // A restored shader source answers with the compiler's verdict for every shader it reaches.
+                        if (isShader) return summary + Environment.NewLine + ImportShaderSources(new List<string> { path });
+
                         if (suppressed) ArmAutoCompileRestoreFallback();
                         bool deferred = triggersCompile && TryDeferUntilReload("__deferred-note " + summary);
                         AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
@@ -1185,7 +1197,7 @@ namespace ItsRenji.Conduit
         {
             if (!TryValidateWritableScriptAssetPath(path, out error)) return false;
             if (IsBatchEditableFile(path)) return true;
-            error = "Refused: file history supports .cs, .shader, .hlsl and .cginc source files.";
+            error = "Refused: file history supports .cs, .shader, .hlsl, .cginc and .compute source files.";
             return false;
         }
 

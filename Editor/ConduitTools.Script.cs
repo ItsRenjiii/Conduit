@@ -56,6 +56,12 @@ namespace ItsRenji.Conduit
                 return "Usage: script-update-or-create <assetPath> | <content>";
             }
 
+            if (IsShaderSourceFile(assetPath))
+            {
+                return "Refused: shader sources are written with shader-update-or-create, which returns the shader compiler's verdict and works in Play Mode. Got '"
+                    + assetPath + "'. Nothing was written.";
+            }
+
             if (!assetPath.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
             {
                 return "Script path must end in .cs: " + assetPath;
@@ -416,7 +422,20 @@ namespace ItsRenji.Conduit
 
             if (verb == "file-restore")
             {
-                return ScriptWriteRefusedInPlayMode(verb) ?? FileRestoreCommand(GetCommandRemainder(command, parts[0]));
+                // The Play Mode refusal depends on the file kind, so the command applies it once the path is known.
+                return FileRestoreCommand(GetCommandRemainder(command, parts[0]));
+            }
+
+            if (verb == "shader-update-or-create")
+            {
+                // Verbatim like script-update-or-create, because the tail is the file's content. Shaders are not
+                // refused in Play Mode: they compile on import and hot-reload into the running scene.
+                return ShaderUpdateOrCreateCommand(GetVerbatimCommandRemainder(command, parts[0]));
+            }
+
+            if (verb == "shader-batch-edit")
+            {
+                return ShaderBatchEditCommand(GetCommandRemainder(command, parts[0]));
             }
 
             if (verb == "script-read")

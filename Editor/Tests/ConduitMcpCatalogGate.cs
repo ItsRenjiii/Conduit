@@ -28,15 +28,25 @@ namespace ItsRenji.Conduit.Tests
     {
         /// <summary>
         /// Tools the catalogue must publish: one per bridge verb under its canonical spelling, plus
-        /// conduit-run and the job_status infrastructure tool. 223 verbs, then those two, and the 74
-        /// ProBuilder verbs on top wherever that optional package is installed - so the figure is
-        /// conditional for the same reason the verbs are.
+        /// conduit-run and the job_status infrastructure tool. 225 verbs in a VRChat Worlds project, then
+        /// those two, and the 74 ProBuilder verbs on top wherever that optional package is installed - so the
+        /// figure is conditional for the same reason the verbs are.
         /// </summary>
 #if CONDUIT_PROBUILDER
-        private const int EXPECTED_TOOL_COUNT = 299;
+        private const int WORLDS_TOOL_COUNT = 301;
 #else
-        private const int EXPECTED_TOOL_COUNT = 225;
+        private const int WORLDS_TOOL_COUNT = 227;
 #endif
+
+        /// <summary>
+        /// Worlds-only verbs the catalogue leaves out where the Worlds SDK is absent: UdonSharp authoring (3),
+        /// compiled-Udon inspection (3) and the vrc-* player and build verbs (17).
+        /// </summary>
+        private const int WORLDS_ONLY_TOOL_COUNT = 23;
+
+        /// <summary>Tools this project must publish: every verb in a Worlds project, the rest without one.</summary>
+        private static int ExpectedToolCount =>
+            ConduitBridge.IsWorldsProject ? WORLDS_TOOL_COUNT : WORLDS_TOOL_COUNT - WORLDS_ONLY_TOOL_COUNT;
 
         /// <summary>A full SHA-256 in lowercase hex, which is what the protocol identity must be.</summary>
         private static readonly Regex _fullDigest = new Regex("^[0-9a-f]{64}$");
@@ -108,8 +118,8 @@ namespace ItsRenji.Conduit.Tests
             }
 
             var tools = ConduitMcpCatalog.ToolsSnapshot();
-            ok &= Check(report, "tool count", tools.Count == EXPECTED_TOOL_COUNT,
-                tools.Count + " (expected " + EXPECTED_TOOL_COUNT + ")");
+            ok &= Check(report, "tool count", tools.Count == ExpectedToolCount,
+                tools.Count + " (expected " + ExpectedToolCount + ")");
 
             var revision = ConduitMcpCatalog.Revision;
             ok &= Check(report, "revision is a full SHA-256", _fullDigest.IsMatch(revision),

@@ -75,7 +75,9 @@ namespace ItsRenji.Conduit
                 return "Asset path must start with Assets/ or Packages/: " + assetPath;
             }
 
-            if (AssetDatabase.LoadMainAssetAtPath(assetPath) == null && !File.Exists(assetPath))
+            // A folder placed on disk from outside the editor is imported like a file, which registers it and
+            // gives it a .meta; refusing it left a folder no verb could make the AssetDatabase see.
+            if (AssetDatabase.LoadMainAssetAtPath(assetPath) == null && !File.Exists(assetPath) && !Directory.Exists(assetPath))
             {
                 return "AssetDatabase could not find asset: " + assetPath;
             }

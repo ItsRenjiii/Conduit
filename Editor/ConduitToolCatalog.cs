@@ -41,7 +41,7 @@ namespace ItsRenji.Conduit
         private static readonly Regex _nonLegacyName = new Regex(@"[^A-Za-z0-9_]");
 
         /// <summary>
-        /// Verbs whose handler takes everything after the first pipe verbatim to end of input. These two
+        /// Verbs whose handler takes everything after the first pipe verbatim to end of input. These
         /// cannot be derived from their signatures - they are shaped exactly like any ordinary two-section
         /// verb, and only the handler source separates them.
         /// </summary>
@@ -49,6 +49,7 @@ namespace ItsRenji.Conduit
         {
             "create-usharp-batch",
             "script-update-or-create",
+            "shader-update-or-create",
         };
 
         /// <summary>
@@ -59,6 +60,7 @@ namespace ItsRenji.Conduit
         private static readonly HashSet<string> _rawPayloadVerbs = new HashSet<string>(StringComparer.Ordinal)
         {
             "udon-batch-edit",
+            "shader-batch-edit",
         };
 
         /// <summary>Modifier order the editor-window-key builder emits, so equivalent calls build equal text.</summary>
@@ -751,7 +753,20 @@ namespace ItsRenji.Conduit
         /// <param name="builders">Builder map.</param>
         private static void RepairBatchEdits(JArray tools, Dictionary<string, Func<JObject, string>> builders)
         {
-            PatchSchema(tools, "udon-batch-edit", schema =>
+            // Both batch verbs take the same payload; only the file kinds and the verdict differ.
+            foreach (string verb in new[] { "udon-batch-edit", "shader-batch-edit" })
+            {
+                RepairBatchEdit(tools, builders, verb);
+            }
+        }
+
+        /// <summary>Publishes one batch verb's edits array schema and its command builder.</summary>
+        /// <param name="tools">Catalogue.</param>
+        /// <param name="builders">Builder map.</param>
+        /// <param name="verb">The batch verb to repair.</param>
+        private static void RepairBatchEdit(JArray tools, Dictionary<string, Func<JObject, string>> builders, string verb)
+        {
+            PatchSchema(tools, verb, schema =>
             {
                 // The signature names this argument, so it arrives as a string and is replaced in place by
                 // the shape it really carries. Renaming it here instead would leave the published signature
@@ -813,7 +828,7 @@ namespace ItsRenji.Conduit
                 }
             });
 
-            PatchBuilder(builders, "udon-batch-edit", arguments =>
+            PatchBuilder(builders, verb, arguments =>
             {
                 var edits = ReadValue(arguments, "edits", new List<string>());
                 if (edits == null) throw new InvalidOperationException("missing required argument: edits");
@@ -829,7 +844,7 @@ namespace ItsRenji.Conduit
                 var section = report == null ? string.Empty : " | " + report;
                 if (edits.Type == JTokenType.String)
                 {
-                    return "udon-batch-edit | " + (string)edits + section;
+                    return verb + " | " + (string)edits + section;
                 }
 
                 var array = edits as JArray;
@@ -838,7 +853,7 @@ namespace ItsRenji.Conduit
                     throw new InvalidOperationException("edits must be a non-empty array of {file_path, old_string, new_string} objects, or a project .json file path");
                 }
 
-                return "udon-batch-edit | " + array.ToString(Formatting.None) + section;
+                return verb + " | " + array.ToString(Formatting.None) + section;
             });
         }
 

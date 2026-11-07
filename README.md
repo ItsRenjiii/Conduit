@@ -16,7 +16,7 @@ Conduit is an MCP-native Unity bridge built for end-to-end VRChat world developm
 
 It gives AI coding agents a typed, inspectable route through Unity, UdonSharp, the VRChat SDK, ClientSim, ProBuilder, animation systems, assets, prefabs, profiling, and the real build pipeline.
 
-**223 core bridge verbs. 74 additional ProBuilder verbs. 33 project-aware engineering skills.**
+**225 core bridge verbs. 74 additional ProBuilder verbs. 33 project-aware engineering skills.**
 
 </div>
 
@@ -198,11 +198,21 @@ Create an individual behaviour or an atomic batch, wait for Unity and UdonSharp 
 
 ### Atomic source editing
 
-Conduit can validate exact replacements across multiple C#, ShaderLab, HLSL, and CGINC files against their original contents before writing a single byte.
+Conduit can validate exact replacements across multiple C# files against their original contents before writing a single byte.
 
 If the batch is valid, it is applied together for one compile.
 
 UdonSharp auto-compilation is suppressed during the batch and the user's original setting is restored after success, reload, or a killed editor.
+
+### Shaders get a real compiler verdict
+
+Unity prints nothing when a shader compiles cleanly, and its import checks only the variant with no keywords. A compute shader's kernels do not compile until first use at all.
+
+So Conduit's shader verbs compile the change themselves. Edit or write ShaderLab, HLSL, CGINC or compute sources, and every shader the change reaches is compiled for the editor's graphics API: every pass and stage, or every kernel, with no keywords and with each keyword the changed files test.
+
+Edit an include and every shader and compute shader that uses it is compiled and reported. Errors come back by file, line and variant.
+
+Shader edits work in Play Mode and hot-reload into the running scene. They are versioned like every other source edit.
 
 ### Inspect what actually compiled
 
@@ -378,9 +388,9 @@ If capture fails, Conduit falls back to the ordinary durable-job path rather tha
 
 # A broad Unity tool surface
 
-Conduit currently publishes **223 core bridge verbs**.
+Conduit currently publishes **225 core bridge verbs**.
 
-When ProBuilder is installed, another **74 modelling verbs** appear automatically for a total of **297 typed bridge verbs** in the verified VRChat Worlds configuration.
+When ProBuilder is installed, another **74 modelling verbs** appear automatically for a total of **299 typed bridge verbs** in the verified VRChat Worlds configuration.
 
 There is no alternate build or configuration switch required.
 
@@ -395,6 +405,7 @@ There is no alternate build or configuration switch required.
 | VRChat                      |              17 | Player control, world metadata, validation, Build, Build & Test, test reload                   |
 | GameObjects and components  |              15 | Create, duplicate, inspect, modify, traverse hierarchies, repair missing scripts               |
 | UdonSharp and compiled Udon |               7 | Atomic authoring, program-asset lifecycle, compiled-program inspection, exposure registry      |
+| Shader sources              |               2 | Versioned edits and writes with a compiled verdict per variant, in Play Mode too               |
 | Other Unity systems         |              68 | Scripts, Console, packages, screenshots, Frame Debugger, reflection, UnityEvents, search, lifecycle, discovery |
 
 Server-owned infrastructure tools are published per authenticated client, so Conduit reports the invariant bridge surface rather than pretending every connection has one universal `tools/list` total.
@@ -513,7 +524,7 @@ VCC then offers each new release as an update. If the project has an older copy 
 2. Press **+** and choose **Add package from git URL...**
 3. Enter `https://github.com/ItsRenjiii/Conduit.git` and press **Add**.
 
-To pin a release, add its tag: `https://github.com/ItsRenjiii/Conduit.git#v1.0.0`.
+To pin a release, add its tag: `https://github.com/ItsRenjiii/Conduit.git#v1.0.1`.
 
 **From a local copy**
 
@@ -572,14 +583,14 @@ The current development baseline is verified against:
 
 Generic Unity authoring tools remain available in non-VRChat projects, including VRChat avatar projects.
 
-VRChat Worlds-only tools are hidden when the Worlds SDK is absent, so the command catalogue reflects what the open project can actually support. UdonSharp authoring, compiled-Udon inspection and the VRChat player and build verbs are removed, leaving **200 core bridge verbs** in an avatar or plain Unity project.
+VRChat Worlds-only tools are hidden when the Worlds SDK is absent, so the command catalogue reflects what the open project can actually support. UdonSharp authoring, compiled-Udon inspection and the VRChat player and build verbs are removed, leaving **202 core bridge verbs** in an avatar or plain Unity project.
 
 ---
 
 # What ships with Conduit
 
 * The in-editor MCP server and typed Unity bridge.
-* **223 core bridge verbs.**
+* **225 core bridge verbs.**
 * **74 optional ProBuilder verbs.**
 * Direct Unity, UdonSharp, VRChat SDK, ClientSim, profiler, animation, scene, asset, prefab, and build-pipeline access.
 * Connection planning and one-click configuration/removal for supported file-based clients.

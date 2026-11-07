@@ -20,13 +20,12 @@ using UnityEngine;
 namespace ItsRenji.Conduit
 {
     /// <summary>
-    /// The udon-batch-edit command: N exact-string replacements across M source files in one atomic call,
-    /// one write per file, and ONE compile for the whole batch. Accepts every file kind the house style
-    /// covers - C# and shader sources - so a shader edit gets the same atomic validation, read-before-edit
-    /// gate and single compile as a script. UdonSharp's file-watcher auto-compile is suppressed for the
-    /// duration of a batch that touches C#, so intermediate writes cannot fire stale-assembly program
-    /// compiles, and the user's own setting is restored afterwards whatever happens - success, reload, or
-    /// crash. A batch with no C# in it leaves that setting alone.
+    /// The batch edit engine behind udon-batch-edit and shader-batch-edit: N exact-string replacements across
+    /// M source files in one atomic call, one write per file. udon-batch-edit edits C# and ends in ONE script
+    /// compile for the whole batch, with UdonSharp's file-watcher auto-compile suppressed for its duration so
+    /// intermediate writes cannot fire stale-assembly program compiles, and the user's own setting restored
+    /// afterwards whatever happens - success, reload, or crash. shader-batch-edit edits shader sources, runs
+    /// in Play Mode, and ends in a synchronous import and the shader compiler's verdict instead of a compile.
     /// </summary>
     internal static partial class ConduitBridge
     {
@@ -50,13 +49,6 @@ namespace ItsRenji.Conduit
         /// outgrows what a client will show in one reply.
         /// </summary>
         private const string BATCH_REPORT_SUMMARY = "summary";
-
-        /// <summary>
-        /// File kinds this verb will edit, matching the set the house code style sets rules for. Excluding
-        /// shaders forced them out to whole-file writes, losing the atomic all-or-nothing validation, the
-        /// read-before-edit gate and the one-compile batching that are the entire point of the verb.
-        /// </summary>
-        private static readonly string[] BatchEditableExtensions = { ".cs", ".shader", ".hlsl", ".cginc" };
 
         /// <summary>
         /// EditorPrefs key stashing the pre-suppression auto-compile value. EditorPrefs is machine-global,
@@ -87,12 +79,29 @@ namespace ItsRenji.Conduit
         /// <returns>Per-edit evidence and the post-compile report, or a precise refusal.</returns>
         private static string UdonBatchEditCommand(string args)
         {
-            string playModeRefusal = ScriptWriteRefusedInPlayMode("udon-batch-edit");
-            if (playModeRefusal != null) return playModeRefusal;
+            return RunBatchEdit("udon-batch-edit", args, false);
+        }
 
-            // The signature is "udon-batch-edit <| edits> [| report:full|summary]", so the MCP layer sends the
-            // JSON verbatim with any report section after it; a raw hand-typed call without the leading pipe
-            // is accepted too.
+        /// <summary>
+        /// The shared batch edit: parses, validates every edit against its file's original content, then writes
+        /// the batch through file history. C# batches end in one script compile and are refused in Play Mode;
+        /// shader batches end in a synchronous import and the shader compiler's verdict, in any editor state.
+        /// </summary>
+        /// <param name="verb">The calling verb, named in usage text, refusals and history.</param>
+        /// <param name="args">The verb's arguments, as UdonBatchEditCommand describes them.</param>
+        /// <param name="shaderSources">True for shader-batch-edit, false for udon-batch-edit.</param>
+        /// <returns>Per-edit evidence and the verdict, or a precise refusal.</returns>
+        private static string RunBatchEdit(string verb, string args, bool shaderSources)
+        {
+            if (!shaderSources)
+            {
+                string playModeRefusal = ScriptWriteRefusedInPlayMode(verb);
+                if (playModeRefusal != null) return playModeRefusal;
+            }
+
+            // The signature is "<verb> <| edits> [| report:full|summary]", so the MCP layer sends the JSON
+            // verbatim with any report section after it; a raw hand-typed call without the leading pipe is
+            // accepted too.
             string payload = (args ?? string.Empty).Trim();
             if (payload.StartsWith("|", StringComparison.Ordinal))
             {
@@ -101,7 +110,7 @@ namespace ItsRenji.Conduit
 
             if (payload.Length == 0)
             {
-                return "Usage: udon-batch-edit | <edits> [| report:full|summary]  where edits is [{\"file_path\",\"old_string\",\"new_string\",\"replace_all\"?}, ...] or the project path of a .json file holding that array, written by hand with the agent's own file tool";
+                return "Usage: " + verb + " | <edits> [| report:full|summary]  where edits is [{\"file_path\",\"old_string\",\"new_string\",\"replace_all\"?}, ...] or the project path of a .json file holding that array, written by hand with the agent's own file tool";
             }
 
             string reportError = SplitBatchEditReport(payload, out string editsJson, out string report);
@@ -113,7 +122,7 @@ namespace ItsRenji.Conduit
             List<BatchEditSpec> edits;
             try
             {
-                edits = ParseBatchEditPayload(ReadBatchEditPayload(editsJson));
+                edits = ParseBatchEditPayload(ReadBatchEditPayload(editsJson), shaderSources);
             }
             catch (Exception ex)
             {
@@ -143,7 +152,8 @@ namespace ItsRenji.Conduit
             {
                 if (!File.Exists(file))
                 {
-                    return "Edit target does not exist: " + file + ". This tool never creates files; use script-update-or-create or create-usharp. Nothing was written.";
+                    return "Edit target does not exist: " + file + ". This tool never creates files; use "
+                        + (shaderSources ? "shader-update-or-create" : "script-update-or-create or create-usharp") + ". Nothing was written.";
                 }
 
                 byte[] currentBytes = File.ReadAllBytes(file);
@@ -179,18 +189,20 @@ namespace ItsRenji.Conduit
 
             var originals = new Dictionary<string, byte[]>();
             foreach (BatchEditFilePlan plan in plans) originals.Add(plan.Path, plan.OriginalBytes);
-            return WithFileHistory(originals, "udon-batch-edit", history =>
+            return WithFileHistory(originals, verb, history =>
             {
-                if (EditorApplication.isPlayingOrWillChangePlaymode)
+                if (!shaderSources && EditorApplication.isPlayingOrWillChangePlaymode)
                     return "Refused: editor entered Play Mode during history preparation. Nothing was written.\n" + history;
                 foreach (BatchEditFilePlan plan in plans)
                     if (!FileHistoryCurrentMatches(plan.Path, plan.OriginalBytes))
                         return "Refused: " + plan.Path + " changed during history preparation. Nothing was written.\n" + history;
-                return ApplyBatchEditPlans(plans, edits.Count, evidence, diffs, landings, report, history);
+                return ApplyBatchEditPlans(verb, shaderSources, plans, edits.Count, evidence, diffs, landings, report, history);
             });
         }
 
         /// <summary>Applies the validated batch with its original rollback semantics, adding capture evidence to the result.</summary>
+        /// <param name="verb">The calling verb, recorded in file history.</param>
+        /// <param name="shaderSources">True when the batch edits shader sources and ends in the shader verdict.</param>
         /// <param name="plans">Validated outcomes for all files.</param>
         /// <param name="editCount">Number of requested replacements.</param>
         /// <param name="evidence">Per-edit match evidence.</param>
@@ -199,7 +211,7 @@ namespace ItsRenji.Conduit
         /// <param name="report">Report mode, full or summary.</param>
         /// <param name="history">Saved pre-images or explicit best-effort capture warnings.</param>
         /// <returns>The batch result or a withheld response until compilation finishes.</returns>
-        private static string ApplyBatchEditPlans(List<BatchEditFilePlan> plans, int editCount,
+        private static string ApplyBatchEditPlans(string verb, bool shaderSources, List<BatchEditFilePlan> plans, int editCount,
             List<string> evidence, List<string> diffs, List<string> landings, string report, string history)
         {
             // Mutation phase: suppress the U# file watcher, write everything, import once.
@@ -236,9 +248,9 @@ namespace ItsRenji.Conduit
                 var completed = new Dictionary<string, byte[]>();
                 foreach (BatchEditFilePlan plan in written)
                     completed.Add(plan.Path, FileHistoryWrittenBytes(plan.Edited, plan.HadBom));
-                return WithFileHistory(completed, "udon-batch-edit", after =>
+                return WithFileHistory(completed, verb, after =>
                     ImportBatchEditPlans(written, editCount, evidence, diffs, landings, report,
-                        history + Environment.NewLine + after, suppressed),
+                        history + Environment.NewLine + after, suppressed, shaderSources),
                     "after-write", releaseHistoryWrite);
             }
             catch
@@ -258,15 +270,21 @@ namespace ItsRenji.Conduit
         /// <param name="report">Report mode, full or summary.</param>
         /// <param name="history">Before and after capture evidence.</param>
         /// <param name="suppressed">Whether the batch owns an auto-compile suppression to restore.</param>
+        /// <param name="shaderSources">True when the batch edits shader sources and ends in the shader verdict.</param>
         /// <returns>The batch result or a withheld compile response.</returns>
         private static string ImportBatchEditPlans(List<BatchEditFilePlan> written, int editCount,
             List<string> evidence, List<string> diffs, List<string> landings, string report, string history,
-            bool suppressed)
+            bool suppressed, bool shaderSources)
         {
             foreach (BatchEditFilePlan plan in written)
             {
                 RecordScriptReadHash(plan.Path);
-                AssetDatabase.ImportAsset(plan.Path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+
+                // Shader sources are imported by the verdict below, which has to watch that import happen.
+                if (!shaderSources)
+                {
+                    AssetDatabase.ImportAsset(plan.Path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+                }
             }
 
             string suppressionNote = suppressed
@@ -292,6 +310,14 @@ namespace ItsRenji.Conduit
                 {
                     summary += Environment.NewLine + Environment.NewLine + string.Join(Environment.NewLine, diffs);
                 }
+            }
+
+            // A shader batch compiles on import and never reloads the domain, so its verdict is read back now.
+            if (shaderSources)
+            {
+                var paths = new List<string>();
+                foreach (BatchEditFilePlan plan in written) paths.Add(plan.Path);
+                return summary + Environment.NewLine + ImportShaderSources(paths);
             }
 
             // One deliberate compile for the whole batch. The response is withheld until the compile and
@@ -395,8 +421,9 @@ namespace ItsRenji.Conduit
         /// loudly instead of silently sending an edit with an empty search string.
         /// </summary>
         /// <param name="payload">The JSON array text.</param>
+        /// <param name="shaderSources">True for shader-batch-edit, which takes shader sources and refuses C#.</param>
         /// <returns>The validated edit list, in payload order.</returns>
-        private static List<BatchEditSpec> ParseBatchEditPayload(string payload)
+        private static List<BatchEditSpec> ParseBatchEditPayload(string payload, bool shaderSources)
         {
             JArray array = JArray.Parse(payload);
             if (array.Count == 0)
@@ -431,10 +458,28 @@ namespace ItsRenji.Conduit
 
                 file = NormalizeAssetPath(file);
                 string pathError;
-                if (!TryValidateWritableScriptAssetPath(file, out pathError) || !IsBatchEditableFile(file))
+                if (!TryValidateWritableScriptAssetPath(file, out pathError))
                 {
-                    string reason = pathError ?? "file must end in " + string.Join(" / ", BatchEditableExtensions);
-                    throw new InvalidOperationException("edit " + index + ": " + reason + " Got '" + file + "'.");
+                    throw new InvalidOperationException("edit " + index + ": " + pathError + " Got '" + file + "'.");
+                }
+
+                // Each kind has one route, so the verdict a caller gets always comes from the right compiler.
+                bool isShader = IsShaderSourceFile(file);
+                if (shaderSources && !isShader)
+                {
+                    throw new InvalidOperationException("edit " + index + ": shader-batch-edit edits " + string.Join(", ", ShaderSourceExtensions)
+                        + " files; edit C# with udon-batch-edit. Got '" + file + "'.");
+                }
+
+                if (!shaderSources && isShader)
+                {
+                    throw new InvalidOperationException("edit " + index + ": shader sources are edited with shader-batch-edit, which returns the shader "
+                        + "compiler's verdict and works in Play Mode. Got '" + file + "'.");
+                }
+
+                if (!shaderSources && !file.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidOperationException("edit " + index + ": file must end in .cs. Got '" + file + "'.");
                 }
 
                 JToken oldToken = item["old_string"];
@@ -934,20 +979,12 @@ namespace ItsRenji.Conduit
 
         #endregion
 
-        /// <summary>True when the path ends in a file kind this verb will edit.</summary>
+        /// <summary>True when the path is a source kind Conduit edits and versions: C# or a shader source.</summary>
         /// <param name="path">Asset-relative path to test.</param>
-        /// <returns><c>true</c> when the extension is editable here.</returns>
+        /// <returns><c>true</c> for a .cs file or a shader source.</returns>
         private static bool IsBatchEditableFile(string path)
         {
-            foreach (string extension in BatchEditableExtensions)
-            {
-                if (path.EndsWith(extension, StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) || IsShaderSourceFile(path);
         }
 
         #region Auto-Compile Suppression

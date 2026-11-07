@@ -269,7 +269,22 @@ namespace ItsRenji.Conduit
                 var next = current + "/" + parts[i];
                 if (!AssetDatabase.IsValidFolder(next))
                 {
-                    AssetDatabase.CreateFolder(current, parts[i]);
+                    // A folder already on disk but not imported yet is registered by importing it. CreateFolder
+                    // would make a renamed sibling ("Name 1") beside it instead, leaving every later write aimed
+                    // at a folder the AssetDatabase still does not know.
+                    if (System.IO.Directory.Exists(next))
+                    {
+                        AssetDatabase.ImportAsset(next, ImportAssetOptions.ForceSynchronousImport);
+                    }
+                    else
+                    {
+                        AssetDatabase.CreateFolder(current, parts[i]);
+                    }
+
+                    if (!AssetDatabase.IsValidFolder(next))
+                    {
+                        throw new InvalidOperationException("could not register the folder " + next + " with the AssetDatabase; nothing was written into it");
+                    }
                 }
 
                 current = next;

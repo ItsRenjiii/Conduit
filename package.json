@@ -1,7 +1,7 @@
 {
   "name": "com.itsrenji.conduit",
   "displayName": "Conduit",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "unity": "2022.3",
   "description": "MCP-native Unity bridge that gives AI coding agents the whole editor, UdonSharp and the VRChat SDK: author, inspect, compile, test, validate, build and launch without leaving the agent session.",
   "author": {
