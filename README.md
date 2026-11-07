@@ -7,6 +7,8 @@
 **Author. Inspect. Compile. Test. Validate. Build. Launch.
 Without leaving the agent session.**
 
+[![Add to VCC](https://img.shields.io/badge/Add_to-VCC-19eff3?style=for-the-badge&logo=vrchat&logoColor=white)](https://itsrenjilabs.github.io/vpm/)
+
 ![Unity 2022.3](https://img.shields.io/badge/Unity-2022.3_LTS-222222?style=for-the-badge&logo=unity&logoColor=white)
 ![VRChat Worlds](https://img.shields.io/badge/VRChat-Worlds-0868AC?style=for-the-badge&logo=vrchat&logoColor=white)
 ![MCP native](https://img.shields.io/badge/MCP-Native-C79A45?style=for-the-badge)
