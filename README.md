@@ -19,7 +19,7 @@ It gives AI coding agents a typed, inspectable route through Unity, UdonSharp, t
 
 **225 core bridge verbs. 74 additional ProBuilder verbs. 33 project-aware engineering skills.**
 
-<a href="https://itsrenjilabs.github.io/vpm/"><img src="https://img.shields.io/badge/add_to-VCC-1f6feb?logo=vrchat&logoColor=white" alt="Add to VCC" height="36"></a>
+<a href="https://itsrenjilabs.github.io/vpm/"><img src="https://img.shields.io/badge/add_to-VCC-1f6feb?logo=vrchat&logoColor=white" alt="Add to VCC" width="170"></a>
 
 </div>
 
