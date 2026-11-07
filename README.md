@@ -7,13 +7,13 @@
 **Author. Inspect. Compile. Test. Validate. Build. Launch.
 Without leaving the agent session.**
 
-[![Add to VCC](https://img.shields.io/badge/Add_to_VCC-070b10?style=for-the-badge&logo=vrchat&logoColor=19eff3)](https://itsrenjilabs.github.io/vpm/)
-[![VCC version](https://img.shields.io/vpm/v/com.itsrenji.conduit?repository_url=https%3A%2F%2Fitsrenjilabs.github.io%2Fvpm%2Findex.json&style=for-the-badge&label=VCC&labelColor=070b10&color=0868AC)](https://itsrenjilabs.github.io/vpm/)
-
-![Unity 2022.3](https://img.shields.io/badge/Unity-2022.3_LTS-222222?style=for-the-badge&logo=unity&logoColor=white)
-![VRChat Worlds](https://img.shields.io/badge/VRChat-Worlds-0868AC?style=for-the-badge&logo=vrchat&logoColor=white)
-![MCP native](https://img.shields.io/badge/MCP-Native-C79A45?style=for-the-badge)
-![Local bridge](https://img.shields.io/badge/Bridge-Local_only-2E7D4F?style=for-the-badge)
+[![GitHub release](https://img.shields.io/github/v/release/ItsRenjiii/Conduit?display_name=tag&sort=semver)](https://github.com/ItsRenjiii/Conduit/releases/latest)
+[![VPM release](https://img.shields.io/vpm/v/com.itsrenji.conduit?repository_url=https%3A%2F%2Fitsrenjilabs.github.io%2Fvpm%2Findex.json)](https://itsrenjilabs.github.io/vpm/)
+[![Add to VCC](https://img.shields.io/badge/add_to-VCC-1f6feb?logo=vrchat&logoColor=white)](https://itsrenjilabs.github.io/vpm/)
+[![Unity 2022.3](https://img.shields.io/badge/Unity-2022.3_LTS-black?logo=unity&logoColor=white)](#compatibility)
+[![VRChat Worlds](https://img.shields.io/badge/VRChat-Worlds-blue?logo=vrchat&logoColor=white)](#compatibility)
+[![MCP](https://img.shields.io/badge/MCP-native-orange)](#it-works-inside-unity)
+[![License](https://img.shields.io/badge/license-PolyForm_Shield-lightgrey)](LICENSE.md)
 
 Conduit is an MCP-native Unity bridge built for end-to-end VRChat world development.
 
