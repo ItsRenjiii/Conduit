@@ -13,6 +13,13 @@ Without leaving the agent session.**
 [![VRChat Worlds and Avatars](https://img.shields.io/badge/VRChat-Worlds_%26_Avatars-blue?logo=vrchat&logoColor=white)](#compatibility)
 [![MCP](https://img.shields.io/badge/MCP-native-orange)](#it-works-inside-unity)
 
+[![Setup: one click](https://img.shields.io/badge/setup-one_click-brightgreen)](#connect-an-agent)
+[![Claude](https://img.shields.io/badge/Claude-D97757?logo=claude&logoColor=white)](#supported-clients)
+[![Cursor](https://img.shields.io/badge/Cursor-black?logo=cursor&logoColor=white)](#supported-clients)
+[![Antigravity](https://img.shields.io/badge/Antigravity-4285F4?logo=google&logoColor=white)](#supported-clients)
+[![Codex](https://img.shields.io/badge/Codex-black)](#supported-clients)
+[![OpenCode](https://img.shields.io/badge/OpenCode-555555)](#supported-clients)
+
 Conduit is an MCP-native Unity bridge for VRChat creators, built for avatars and worlds alike.
 
 It gives AI coding agents a typed, inspectable route through Unity, the VRChat SDK, animators, shaders, materials, assets, prefabs and profiling. In a world project it goes further, through UdonSharp, ClientSim, ProBuilder and the real build pipeline.
