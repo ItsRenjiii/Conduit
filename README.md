@@ -13,9 +13,9 @@ Without leaving the agent session.**
 [![VRChat Worlds and Avatars](https://img.shields.io/badge/VRChat-Worlds_%26_Avatars-blue?logo=vrchat&logoColor=white)](#compatibility)
 [![MCP](https://img.shields.io/badge/MCP-native-orange)](#it-works-inside-unity)
 
-Conduit is an MCP-native Unity bridge built for end-to-end VRChat world development.
+Conduit is an MCP-native Unity bridge for VRChat creators, built for avatars and worlds alike.
 
-It gives AI coding agents a typed, inspectable route through Unity, UdonSharp, the VRChat SDK, ClientSim, ProBuilder, animation systems, assets, prefabs, profiling, and the real build pipeline.
+It gives AI coding agents a typed, inspectable route through Unity, the VRChat SDK, animators, shaders, materials, assets, prefabs and profiling. In a world project it goes further, through UdonSharp, ClientSim, ProBuilder and the real build pipeline.
 
 **225 core bridge verbs. 74 additional ProBuilder verbs. 33 project-aware engineering skills.**
 
@@ -193,7 +193,18 @@ The resulting diagnostic guidance now lives in Conduit's lighting and shader ski
 
 # VRChat is part of the architecture
 
-Conduit was built for VRChat world development rather than treating VRChat as a handful of extra Unity commands.
+Conduit was built for VRChat creation rather than treating VRChat as a handful of extra Unity commands. It detects whether a project is an avatar or a world project and offers the tools that project can use.
+
+### Avatars
+
+In an avatar project the agent works through the same typed tools:
+
+* author AnimatorControllers end to end: layers, states, transitions, blend trees, parameters, avatar masks and clips
+* read and write any component, VRChat Dynamics included, with references resolved properly
+* edit shaders and get a compiled verdict for every variant the change reaches
+* set materials, importers, prefabs and the hierarchy, then check the result in a screenshot
+
+Avatars are still built and uploaded through the VRChat SDK panel.
 
 ### UdonSharp lifecycle
 
