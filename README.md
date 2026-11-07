@@ -9,17 +9,17 @@ Without leaving the agent session.**
 
 [![GitHub release](https://img.shields.io/github/v/release/ItsRenjiii/Conduit?display_name=tag&sort=semver)](https://github.com/ItsRenjiii/Conduit/releases/latest)
 [![VPM release](https://img.shields.io/vpm/v/com.itsrenji.conduit?repository_url=https%3A%2F%2Fitsrenjilabs.github.io%2Fvpm%2Findex.json)](https://itsrenjilabs.github.io/vpm/)
-[![Add to VCC](https://img.shields.io/badge/add_to-VCC-1f6feb?logo=vrchat&logoColor=white)](https://itsrenjilabs.github.io/vpm/)
 [![Unity 2022.3](https://img.shields.io/badge/Unity-2022.3_LTS-black?logo=unity&logoColor=white)](#compatibility)
 [![VRChat Worlds](https://img.shields.io/badge/VRChat-Worlds-blue?logo=vrchat&logoColor=white)](#compatibility)
 [![MCP](https://img.shields.io/badge/MCP-native-orange)](#it-works-inside-unity)
-[![License](https://img.shields.io/badge/license-PolyForm_Shield-lightgrey)](LICENSE.md)
 
 Conduit is an MCP-native Unity bridge built for end-to-end VRChat world development.
 
 It gives AI coding agents a typed, inspectable route through Unity, UdonSharp, the VRChat SDK, ClientSim, ProBuilder, animation systems, assets, prefabs, profiling, and the real build pipeline.
 
 **225 core bridge verbs. 74 additional ProBuilder verbs. 33 project-aware engineering skills.**
+
+<a href="https://itsrenjilabs.github.io/vpm/"><img src="https://img.shields.io/badge/add_to-VCC-1f6feb?logo=vrchat&logoColor=white" alt="Add to VCC" height="36"></a>
 
 </div>
 
