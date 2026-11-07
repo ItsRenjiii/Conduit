@@ -73,6 +73,9 @@ namespace ItsRenji.Conduit
         /// <summary>The live client cards, kept so the poll can update them without rebuilding the tree.</summary>
         private readonly List<ClientCard> _cards = new List<ClientCard>();
 
+        /// <summary>Whether the language picker is open under the header.</summary>
+        private bool _languagePickerOpen;
+
         #region File history state
 
         /// <summary>Storage budget control, bounded by measured usage.</summary>
@@ -213,6 +216,7 @@ namespace ItsRenji.Conduit
             root.Add(scroll);
 
             scroll.Add(BuildHeader());
+            scroll.Add(BuildLanguageCard());
             scroll.Add(BuildStatusCard());
             scroll.Add(BuildHistoryCard());
 
@@ -228,6 +232,23 @@ namespace ItsRenji.Conduit
             // The chips read two files per client off disk, so they are polled rather than bound: the
             // answer only changes when the user presses a button here or edits a document elsewhere.
             root.schedule.Execute(RefreshState).Every(POLL_INTERVAL_MS);
+        }
+
+        /// <summary>The text for a key in the window's chosen language.</summary>
+        /// <param name="key">String key.</param>
+        /// <returns>The translated text.</returns>
+        private static string T(string key)
+        {
+            return ConduitLocalization.T(key);
+        }
+
+        /// <summary>The text for a key in the window's chosen language, with its values filled in.</summary>
+        /// <param name="key">String key.</param>
+        /// <param name="args">Values for the string's numbered placeholders.</param>
+        /// <returns>The formatted text.</returns>
+        private static string F(string key, params object[] args)
+        {
+            return ConduitLocalization.Format(key, args);
         }
 
         /// <summary>Builds the brand title block that sits on the night, above every card.</summary>
@@ -249,11 +270,118 @@ namespace ItsRenji.Conduit
             title.AddToClassList("cw-header__title");
             header.Add(title);
 
-            Label subtitle = new Label("Unity agent bridge, MCP native");
+            Label subtitle = new Label(T("header.subtitle"));
             subtitle.AddToClassList("cw-header__subtitle");
             header.Add(subtitle);
 
             return header;
+        }
+
+        /// <summary>
+        /// Builds the language card, the first card in the window so a reader who cannot read the current
+        /// language still finds it: a bar showing the current flag and the language's own name, which opens a
+        /// grid of every flag inside the same card. Choosing saves the choice and redraws the whole window,
+        /// because every card holds text.
+        /// </summary>
+        /// <returns>The language card.</returns>
+        private VisualElement BuildLanguageCard()
+        {
+            VisualElement card = new VisualElement();
+            card.AddToClassList("cw-card");
+            card.AddToClassList("cw-language-card");
+
+            Button bar = new Button(() =>
+            {
+                _languagePickerOpen = !_languagePickerOpen;
+                Rebuild();
+            });
+            // Named so the bar can be found and pressed by name, since most of it is an image.
+            bar.name = "language-picker";
+            bar.AddToClassList("cw-language-bar");
+
+            Label caption = new Label(T("language.tooltip"));
+            caption.AddToClassList("cw-language-bar__caption");
+            bar.Add(caption);
+
+            string currentFlag = ConduitLocalization.CurrentFlag;
+            Texture2D flag = ConduitLocalization.Flag(currentFlag);
+            if (flag != null)
+            {
+                Image flagImage = new Image { image = flag, scaleMode = ScaleMode.ScaleToFit };
+                flagImage.AddToClassList("cw-language-bar__flag");
+                bar.Add(flagImage);
+            }
+
+            string currentName = string.Empty;
+            foreach (ConduitLocalization.Language language in ConduitLocalization.Languages)
+            {
+                if (language.Code == ConduitLocalization.CurrentCode) currentName = language.Name;
+            }
+
+            Label name = new Label(currentName);
+            name.AddToClassList("cw-language-bar__name");
+            bar.Add(name);
+
+            // A down or up triangle, saying the grid opens and closes here.
+            Label chevron = new Label(_languagePickerOpen ? "▴" : "▾");
+            chevron.AddToClassList("cw-language-bar__chevron");
+            bar.Add(chevron);
+            card.Add(bar);
+
+            if (_languagePickerOpen) card.Add(BuildLanguagePicker(currentFlag));
+            return card;
+        }
+
+        /// <summary>
+        /// Builds the language grid: one tile per flag, each naming its language in that language, so a reader
+        /// can find their own without reading the one the window is in now.
+        /// </summary>
+        /// <param name="currentFlag">The flag in use, marked as current.</param>
+        /// <returns>The picker element.</returns>
+        private VisualElement BuildLanguagePicker(string currentFlag)
+        {
+            VisualElement picker = new VisualElement();
+            picker.AddToClassList("cw-picker");
+            foreach (ConduitLocalization.Language language in ConduitLocalization.Languages)
+            {
+                foreach (string flagName in language.Flags)
+                {
+                    string code = language.Code;
+                    string chosenFlag = flagName;
+                    Button tile = new Button(() =>
+                    {
+                        ConduitLocalization.Choose(code, chosenFlag);
+                        _languagePickerOpen = false;
+                        Rebuild();
+                    });
+                    tile.name = "language-" + flagName;
+                    tile.AddToClassList("cw-picker__tile");
+                    tile.EnableInClassList("cw-picker__tile--current", flagName == currentFlag);
+
+                    Texture2D flag = ConduitLocalization.Flag(flagName);
+                    if (flag != null)
+                    {
+                        Image image = new Image { image = flag, scaleMode = ScaleMode.ScaleToFit };
+                        image.AddToClassList("cw-picker__flag");
+                        tile.Add(image);
+                    }
+
+                    Label name = new Label(language.Name);
+                    name.AddToClassList("cw-picker__name");
+                    tile.Add(name);
+                    picker.Add(tile);
+                }
+            }
+
+            return picker;
+        }
+
+        /// <summary>The kind of project this is, in the window's language.</summary>
+        /// <returns>The project kind.</returns>
+        private static string ProjectKindText()
+        {
+            if (!ConduitBridge.IsVrchatProject) return T("kind.unity");
+            return ConduitBridge.IsWorldsProject ? T("kind.worlds") : T("kind.avatars");
         }
 
         /// <summary>Builds the bridge / server status card.</summary>
@@ -274,32 +402,32 @@ namespace ItsRenji.Conduit
         {
             if (!ConduitMcpCatalog.IsPublished)
             {
-                return ConduitBridge.CommandCount + " verbs, catalogue not published yet";
+                return F("commands.unpublished", ConduitBridge.CommandCount);
             }
 
-            return ConduitMcpCatalog.ToolCount + " tools (" + ConduitBridge.CommandCount + " verbs)";
+            return F("commands.published", ConduitMcpCatalog.ToolCount, ConduitBridge.CommandCount);
         }
 
         /// <returns>Status card element.</returns>
         private VisualElement BuildStatusCard()
         {
-            VisualElement card = Card("Status");
+            VisualElement card = Card(T("status.heading"));
 
             int port = ConduitHttpTransport.Port;
 
-            card.Add(Row("Bridge", "Active"));
-            card.Add(Row("Project", ConduitBridge.ProjectKindLabel()));
-            card.Add(Row("Commands", PublishedToolSummary()));
-            card.Add(Row("Unity", Application.unityVersion));
-            card.Add(Row("Config key", ServerName));
-            card.Add(Row("Endpoint", port > 0 ? ConduitConnectPlan.EndpointUrl(port) : "not bound"));
-            card.Add(Row("Identity", Masked(ConduitHttpTransport.Identity)));
-            card.Add(Row("Bearer", Masked(ConduitHttpTransport.Token)));
+            card.Add(Row(T("status.bridge"), T("status.active")));
+            card.Add(Row(T("status.project"), ProjectKindText()));
+            card.Add(Row(T("status.commands"), PublishedToolSummary()));
+            card.Add(Row(T("status.unity"), Application.unityVersion));
+            card.Add(Row(T("status.configKey"), ServerName));
+            card.Add(Row(T("status.endpoint"), port > 0 ? ConduitConnectPlan.EndpointUrl(port) : T("status.notBound")));
+            card.Add(Row(T("status.identity"), Masked(ConduitHttpTransport.Identity)));
+            card.Add(Row(T("status.bearer"), Masked(ConduitHttpTransport.Token)));
 
             VisualElement actions = Actions();
-            actions.Add(Button("Refresh agent tools", () => ShowNotification(new GUIContent(ConduitBridge.BumpToolsEpoch()))));
+            actions.Add(Button(T("status.refreshTools"), () => ShowNotification(new GUIContent(ConduitBridge.BumpToolsEpoch()))));
             card.Add(actions);
-            card.Add(Note("Refresh after editing the bridge - connected agents reload their tool list, no client restart.", true));
+            card.Add(Note(T("status.refreshNote"), true));
 
             return card;
         }
@@ -340,8 +468,8 @@ namespace ItsRenji.Conduit
         /// <returns>A leading fragment and the length, or a note that there is nothing published yet.</returns>
         private static string Masked(string value)
         {
-            if (string.IsNullOrEmpty(value)) return "not published";
-            return value.Substring(0, Math.Min(8, value.Length)) + "... (" + value.Length + " chars)";
+            if (string.IsNullOrEmpty(value)) return T("masked.notPublished");
+            return F("masked.value", value.Substring(0, Math.Min(8, value.Length)), value.Length);
         }
 
         /// <summary>Builds one client card with its status chip and actions.</summary>
@@ -367,15 +495,15 @@ namespace ItsRenji.Conduit
             // text has to pick a winner, and the precedence order doing the picking is hand-written and can be
             // wrong, which silently drops a state the user needed. These cannot hide one another: two lighting
             // at once is a contradiction made visible rather than swallowed.
-            Label chipConnected = Chip(head, "connected", "cw-chip--on");
+            Label chipConnected = Chip(head, T("chip.connected"), "cw-chip--on");
             // "not set up" rather than "not connected": this reports whether an ENTRY EXISTS, while the green
             // reports whether a client is attached. They are two axes, and naming them as two ends of one
             // reads as a contradiction whenever both are true, which they legitimately can be.
-            Label chipOffline = Chip(head, "not set up", "cw-chip--off");
-            Label chipOutOfDate = Chip(head, "connection out of date", "cw-chip--warn");
-            Label chipRestart = Chip(head, "restart to connect", "cw-chip--warn");
-            Label chipDropped = Chip(head, "not connected", "cw-chip--off");
-            Label chipSkills = Chip(head, "skills out of date", "cw-chip--warn");
+            Label chipOffline = Chip(head, T("chip.notSetUp"), "cw-chip--off");
+            Label chipOutOfDate = Chip(head, T("chip.outOfDate"), "cw-chip--warn");
+            Label chipRestart = Chip(head, T("chip.restart"), "cw-chip--warn");
+            Label chipDropped = Chip(head, T("chip.notConnected"), "cw-chip--off");
+            Label chipSkills = Chip(head, T("chip.skillsOutOfDate"), "cw-chip--warn");
 
             // Shown with forward slashes. The value itself keeps the separators the OS gave it and is only
             // ever used to open or write the file; this is the display copy. Backslashes are what the drawn
@@ -387,7 +515,7 @@ namespace ItsRenji.Conduit
 
             VisualElement actions = Actions();
 
-            Button connect = Button("Connect", () =>
+            Button connect = Button(T("button.connect"), () =>
             {
                 Connect(client, configPath);
                 Rebuild();
@@ -395,26 +523,26 @@ namespace ItsRenji.Conduit
             connect.AddToClassList("cw-button--primary");
             actions.Add(connect);
 
-            Button remove = Button("Remove", () =>
+            Button remove = Button(T("button.remove"), () =>
             {
                 RemoveConduit(client, configPath);
                 Rebuild();
             });
             actions.Add(remove);
 
-            actions.Add(Compact("Copy", () =>
+            actions.Add(Compact(T("button.copy"), () =>
             {
                 EditorGUIUtility.systemCopyBuffer = Snippet(client);
-                ShowNotification(new GUIContent("Config copied"));
+                ShowNotification(new GUIContent(T("notify.configCopied")));
             }));
 
-            actions.Add(Compact("Open MCP", () => Reveal(configPath)));
+            actions.Add(Compact(T("button.openMcp"), () => Reveal(configPath)));
 
-            Button skills = Compact("Open skills", () => Reveal(ConduitSkills.SkillsRoot(client)));
+            Button skills = Compact(T("button.openSkills"), () => Reveal(ConduitSkills.SkillsRoot(client)));
             skills.SetEnabled(skillsSupported);
             actions.Add(skills);
 
-            actions.Add(Compact("Download", () =>
+            actions.Add(Compact(T("button.download"), () =>
             {
                 string url = DownloadUrl(client);
                 if (!string.IsNullOrEmpty(url)) Application.OpenURL(url);
@@ -443,19 +571,19 @@ namespace ItsRenji.Conduit
         /// <returns>A card with measured usage and a guarded whole-MiB slider.</returns>
         private VisualElement BuildHistoryCard()
         {
-            VisualElement card = Card("File history");
+            VisualElement card = Card(T("history.heading"));
             card.name = "conduit-file-history";
-            card.Add(Note("Conduit keeps versions of the scripts and shaders it changes. Your agent can bring back an earlier version, or return to a newer saved version.", false));
-            card.Add(Note("Saved versions are compressed to use less space. Choose how much disk space to keep for history, up to 1 GiB. Older versions make room for new ones when a limit is reached.", true));
-            _historyUsage = Note("Checking saved versions...", false);
+            card.Add(Note(T("history.intro"), false));
+            card.Add(Note(T("history.compression"), true));
+            _historyUsage = Note(T("history.checking"), false);
             _historyUsage.name = "history-usage";
             _historyUsage.AddToClassList("cw-history-usage");
             card.Add(_historyUsage);
-            _historyLimit = new SliderInt("Storage limit (MiB)", 1, ConduitFileHistory.MAX_BUDGET_MIB)
+            _historyLimit = new SliderInt(T("history.limitLabel"), 1, ConduitFileHistory.MAX_BUDGET_MIB)
             {
                 name = "history-limit-mib",
                 showInputField = true,
-                tooltip = "MiB measures disk space. This limit cannot be lower than the space your saved history already uses."
+                tooltip = T("history.limitTooltip")
             };
             _historyLimit.AddToClassList("cw-history-slider");
             _historyLimit.SetValueWithoutNotify(_historyDraftMiB);
@@ -468,14 +596,14 @@ namespace ItsRenji.Conduit
                 RenderHistoryState();
             });
             card.Add(_historyLimit);
-            _historyMessage = Note("Checking how much space your saved history needs.", true);
+            _historyMessage = Note(T("history.checkingSpace"), true);
             _historyMessage.name = "history-message";
             card.Add(_historyMessage);
             VisualElement actions = Actions();
-            _historySave = Button("Save limit", () => StartHistoryTask(_historyDraftMiB));
+            _historySave = Button(T("history.save"), () => StartHistoryTask(_historyDraftMiB));
             _historySave.AddToClassList("cw-button--primary");
             actions.Add(_historySave);
-            actions.Add(Compact("Check again", RequestHistoryRefresh));
+            actions.Add(Compact(T("history.checkAgain"), RequestHistoryRefresh));
             card.Add(actions);
             RenderHistoryState();
             RequestHistoryRefresh();
@@ -519,7 +647,7 @@ namespace ItsRenji.Conduit
                     CancelHistoryTask();
                     _historyData = null;
                     RenderHistoryState();
-                    _historyMessage.text = "Checking history took too long. Press Check again to retry.";
+                    _historyMessage.text = T("history.tooLong");
                     return;
                 }
                 var completed = _historyTask;
@@ -530,10 +658,10 @@ namespace ItsRenji.Conduit
                 _historyCancellation = null;
                 if (completed.IsFaulted || completed.IsCanceled)
                 {
-                    string reason = completed.Exception?.GetBaseException().Message ?? "The operation was cancelled.";
+                    string reason = completed.Exception?.GetBaseException().Message ?? T("history.cancelled");
                     _historyData = null;
                     RenderHistoryState();
-                    _historyMessage.text = wasSaving ? "The limit could not be saved. Check again to see the current limit." : "Couldn't read file history. Press Check again to retry.";
+                    _historyMessage.text = wasSaving ? T("history.saveFailed") : T("history.readFailed");
                     _historyMessage.tooltip = reason;
                     Interlocked.Exchange(ref _historyRefreshRequested, 0);
                     return;
@@ -562,19 +690,20 @@ namespace ItsRenji.Conduit
             _historySave?.SetEnabled(known && !busy && minimum <= ConduitFileHistory.MAX_BUDGET_MIB
                 && _historyDraftMiB * ConduitFileHistory.MIB_BYTES != _historyData.MaxBytes);
             if (_historyUsage == null || _historyMessage == null) return;
+            // The sizes are formatted here and passed in as text, so every language shows the same figures.
             _historyUsage.text = known
-                ? string.Format("Using {0:0.##} MiB of {1:0.##} MiB. {2} saved {3}.",
-                    _historyData.Bytes / (double)ConduitFileHistory.MIB_BYTES,
-                    _historyData.MaxBytes / (double)ConduitFileHistory.MIB_BYTES,
-                    _historyData.Versions, _historyData.Versions == 1 ? "version" : "versions")
-                : busy ? "Checking saved versions..." : "History usage is unavailable.";
+                ? F(_historyData.Versions == 1 ? "history.usageOne" : "history.usageMany",
+                    (_historyData.Bytes / (double)ConduitFileHistory.MIB_BYTES).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture),
+                    (_historyData.MaxBytes / (double)ConduitFileHistory.MIB_BYTES).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture),
+                    _historyData.Versions)
+                : busy ? T("history.checking") : T("history.unavailable");
             _historyMessage.tooltip = string.Empty;
             _historyMessage.text = busy
-                ? _historySaving ? "Saving your limit..." : "Checking how much space your saved history needs."
+                ? _historySaving ? T("history.saving") : T("history.checkingSpace")
                 : known ? minimum > ConduitFileHistory.MAX_BUDGET_MIB
-                    ? "Your saved history already exceeds 1 GiB. Existing versions have been left untouched."
-                    : "Minimum: " + minimum + " MiB to protect existing saved versions. Up to " + _historyData.VersionsPerFile + " versions per file."
-                : "Press Check again to read the current history settings.";
+                    ? T("history.exceeds")
+                    : F("history.minimum", minimum, _historyData.VersionsPerFile)
+                : T("history.pressCheck");
             _historyLimit.MarkDirtyRepaint();
         }
 
@@ -602,20 +731,9 @@ namespace ItsRenji.Conduit
         /// <returns>About card element.</returns>
         private static VisualElement BuildAboutCard()
         {
-            VisualElement card = Card("What connecting does");
-
-            card.Add(Note(
-                "Writes an MCP server entry named after this project (" + ServerName + ") into that client's " +
-                "config, merged rather than overwritten, and installs the Conduit conventions as agent skills " +
-                "in the skills folder that client reads inside this project, so the right conventions load " +
-                "themselves when the agent starts that kind of work.", false));
-
-            card.Add(Note(
-                "Each project registers its own entry and its own skills, so one client can drive several " +
-                "projects in parallel. The entry points straight at this editor, so it starts no process of " +
-                "its own and a project whose editor is closed refuses the connection rather than leaving one " +
-                "running. Edit a conduit document and the card offers Update skills. Restart the client after " +
-                "connecting.", true));
+            VisualElement card = Card(T("about.heading"));
+            card.Add(Note(F("about.entry", ServerName), false));
+            card.Add(Note(T("about.parallel"), true));
 
             return card;
         }
@@ -669,7 +787,7 @@ namespace ItsRenji.Conduit
                 // EXISTING is what greys the button out at the exact moment the credentials it wrote have
                 // been superseded, which leaves re-Connecting impossible without removing the entry first.
                 bool connectActive = !registered || !current || !skillsOk;
-                card.Connect.text = registered && current && !skillsOk ? "Update skills" : "Connect";
+                card.Connect.text = registered && current && !skillsOk ? T("button.updateSkills") : T("button.connect");
                 card.Connect.SetEnabled(connectActive);
                 card.Connect.EnableInClassList("cw-button--ok", connectActive);
 
@@ -1144,11 +1262,11 @@ namespace ItsRenji.Conduit
 
                     File.WriteAllText(configPath, root.ToString(Formatting.Indented));
                 }
-                ShowNotification(new GUIContent(client + " connected"));
+                ShowNotification(new GUIContent(F("notify.connected", client)));
             }
             catch (Exception ex)
             {
-                EditorUtility.DisplayDialog("Conduit", "Could not update " + client + " config automatically:\n\n" + ex.Message + "\n\nUse Copy and paste the entry in manually instead.", "OK");
+                EditorUtility.DisplayDialog("Conduit", F("dialog.connectFailed", client, ex.Message), T("dialog.ok"));
                 return;
             }
 
@@ -1163,8 +1281,7 @@ namespace ItsRenji.Conduit
             }
             catch (Exception ex)
             {
-                EditorUtility.DisplayDialog("Conduit", "MCP was configured for " + client
-                    + ", but its session hook could not be installed:\n\n" + ex.Message, "OK");
+                EditorUtility.DisplayDialog("Conduit", F("dialog.hookFailed", client, ex.Message), T("dialog.ok"));
             }
 
             // The other client-specific half of the same job: this harness publishes no address a
@@ -1177,7 +1294,7 @@ namespace ItsRenji.Conduit
             }
             catch (Exception ex)
             {
-                EditorUtility.DisplayDialog("Conduit", "MCP was configured for " + client + ", but its plugin could not be installed:\n\n" + ex.Message, "OK");
+                EditorUtility.DisplayDialog("Conduit", F("dialog.pluginFailed", client, ex.Message), T("dialog.ok"));
             }
 
             // The same button installs the skills, deliberately: an agent holding the tools but not the
@@ -1194,7 +1311,7 @@ namespace ItsRenji.Conduit
             }
             catch (Exception ex)
             {
-                EditorUtility.DisplayDialog("Conduit", "MCP was configured for " + client + ", but the skills could not be written:\n\n" + ex.Message, "OK");
+                EditorUtility.DisplayDialog("Conduit", F("dialog.skillsFailed", client, ex.Message), T("dialog.ok"));
             }
         }
 
@@ -1233,11 +1350,11 @@ namespace ItsRenji.Conduit
                     }
                 }
 
-                ShowNotification(new GUIContent(client + " removed"));
+                ShowNotification(new GUIContent(F("notify.removed", client)));
             }
             catch (Exception ex)
             {
-                EditorUtility.DisplayDialog("Conduit", "Could not update " + client + " config:\n\n" + ex.Message, "OK");
+                EditorUtility.DisplayDialog("Conduit", F("dialog.removeFailed", client, ex.Message), T("dialog.ok"));
             }
 
             // Mirror of Connect: the tools and the conventions arrive and leave together, so a removed
@@ -1251,7 +1368,7 @@ namespace ItsRenji.Conduit
             }
             catch (Exception ex)
             {
-                EditorUtility.DisplayDialog("Conduit", "The MCP entry was removed, but the skills could not be deleted:\n\n" + ex.Message, "OK");
+                EditorUtility.DisplayDialog("Conduit", F("dialog.removeSkillsFailed", ex.Message), T("dialog.ok"));
             }
 
             // The session hook leaves with the direct MCP entry, so a removed project cannot keep
@@ -1262,8 +1379,7 @@ namespace ItsRenji.Conduit
             }
             catch (Exception ex)
             {
-                EditorUtility.DisplayDialog("Conduit", "The MCP entry was removed, but its session hook "
-                    + "could not be deleted:\n\n" + ex.Message, "OK");
+                EditorUtility.DisplayDialog("Conduit", F("dialog.removeHookFailed", ex.Message), T("dialog.ok"));
             }
 
             // Mirror of Connect for the plugin client. Leaving one registered is worse than leaving a stale
@@ -1276,7 +1392,7 @@ namespace ItsRenji.Conduit
             }
             catch (Exception ex)
             {
-                EditorUtility.DisplayDialog("Conduit", "The MCP entry was removed, but its plugin could not be deleted:\n\n" + ex.Message, "OK");
+                EditorUtility.DisplayDialog("Conduit", F("dialog.removePluginFailed", ex.Message), T("dialog.ok"));
             }
         }
 

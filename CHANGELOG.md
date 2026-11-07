@@ -2,6 +2,12 @@
 
 All notable changes to Conduit are recorded here. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 1.0.3 - 2026-11-07
+
+### Added
+
+- The Conduit window is available in 13 languages: English, Japanese, Korean, Simplified and Traditional Chinese, French, German, Spanish, Italian, Brazilian Portuguese, Polish, Russian and toki pona. Pick one from the Language card at the top of the window. The choice is saved per user, survives a restart and applies in every project, and any string without a translation falls back to English.
+
 ## 1.0.2 - 2026-11-07
 
 ### Fixed

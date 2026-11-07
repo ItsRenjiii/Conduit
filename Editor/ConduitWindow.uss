@@ -76,6 +76,123 @@ https://polyformproject.org/licenses/shield/1.0.0
     padding-bottom: 14px;
 }
 
+/* The language card: the first card in the window, so it is found even by a reader who cannot read the
+   language it is in. The whole bar is the button: caption, current flag, the language's own name, chevron. */
+.cw-language-card {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.cw-language-bar {
+    flex-direction: row;
+    align-items: center;
+    margin: 0;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 4px;
+    padding-right: 6px;
+    background-color: rgba(0, 0, 0, 0);
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+.cw-language-bar:hover {
+    background-color: var(--cw-bronze-wash);
+}
+
+.cw-language-bar__caption {
+    -unity-font-style: bold;
+    font-size: 12px;
+    color: var(--cw-ink);
+    margin-right: 10px;
+}
+
+.cw-language-bar__flag {
+    width: 32px;
+    height: 24px;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.cw-language-bar__name {
+    flex-grow: 1;
+    font-size: 12px;
+    color: var(--cw-ink);
+    -unity-text-align: middle-left;
+}
+
+.cw-language-bar__chevron {
+    font-size: 12px;
+    color: var(--cw-bronze);
+}
+
+/* The grid of flag tiles, opened inside the language card. */
+.cw-picker {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 8px;
+}
+
+.cw-picker__tile {
+    width: 140px;
+    flex-direction: row;
+    align-items: center;
+    margin: 3px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 6px;
+    padding-right: 6px;
+    background-color: var(--cw-bone);
+    border-left-color: var(--cw-bone-line);
+    border-right-color: var(--cw-bone-line);
+    border-top-color: var(--cw-bone-line);
+    border-bottom-color: var(--cw-bone-line);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+.cw-picker__tile:hover {
+    background-color: var(--cw-bone-raised);
+    border-left-color: var(--cw-bronze-soft);
+    border-right-color: var(--cw-bronze-soft);
+    border-top-color: var(--cw-bronze-soft);
+    border-bottom-color: var(--cw-bronze-soft);
+}
+
+.cw-picker__tile--current {
+    background-color: var(--cw-bronze-wash);
+    border-left-color: var(--cw-bronze);
+    border-right-color: var(--cw-bronze);
+    border-top-color: var(--cw-bronze);
+    border-bottom-color: var(--cw-bronze);
+}
+
+.cw-picker__flag {
+    width: 28px;
+    height: 21px;
+    margin-right: 6px;
+    flex-shrink: 0;
+}
+
+.cw-picker__name {
+    font-size: 11px;
+    color: var(--cw-ink);
+    -unity-text-align: middle-left;
+}
+
 /* The mark's box, not the art: the image is scaled to fit inside it, so a wider mark letterboxes
    rather than cropping and every brand surface shows it at the same presence. */
 .cw-header__logo {
