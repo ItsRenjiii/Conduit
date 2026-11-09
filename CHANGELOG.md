@@ -2,6 +2,12 @@
 
 All notable changes to Conduit are recorded here. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 1.0.4 - 2026-11-09
+
+### Changed
+
+- The UdonSharp skill now says why behaviours with different sync modes must not share a GameObject: the GameObject carries one sync method, so a `Manual` behaviour beside a `NoVariableSync` or `Continuous` one is sent under Continuous rules and loses most of its sync budget.
+
 ## 1.0.3 - 2026-11-07
 
 ### Added

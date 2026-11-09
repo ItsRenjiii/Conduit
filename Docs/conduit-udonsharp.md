@@ -263,9 +263,12 @@
   DontDestroyOnLoad scene and Udon's `GameObject.Find` cannot reach that scene - measured in one frame, the
   same call returning the active scene's objects and null for that one. A component on your own object
   needs no scene search at all. (SDK 3.10.5-beta.1)
-- **Never put behaviours with different `UdonBehaviourSyncMode` values on the same GameObject.** Keep
-  behaviours on purpose-specific objects instead of stacking unrelated managers on a shared root - a UI
-  manager on its UI object, a queue/state manager on its own object.
+- **Never put behaviours with different `UdonBehaviourSyncMode` values on the same GameObject.** A
+  GameObject carries ONE sync method, so mixing modes forces one behaviour onto the other's - a `Manual`
+  behaviour beside a `NoVariableSync` or `Continuous` one is sent under Continuous rules and its ~280 KB
+  budget drops to ~200 bytes. The SDK warns about it on the behaviour itself. Keep behaviours on
+  purpose-specific objects instead of stacking unrelated managers on a shared root - a UI manager on its
+  UI object, a queue/state manager on its own object.
 - **Plain C# is stripped from VRChat uploads.** Usable for in-editor testing, but it will not ship. A
   STANDALONE editor script - an Editor-folder class, a MonoBehaviour tool - goes under `#if UNITY_EDITOR`.
   **That guard is not sufficient for a member ON a U# behaviour - see the next rule.**
