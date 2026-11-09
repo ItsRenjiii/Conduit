@@ -2,6 +2,12 @@
 
 All notable changes to Conduit are recorded here. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 1.0.5 - 2026-11-09
+
+### Changed
+
+- The note shown after connecting Claude, and the README, now say that a Claude session loads only the Conduit server registered for its own folder, so the session must run in the Unity project's folder to reach that editor. The other clients load every project's server in every session.
+
 ## 1.0.4 - 2026-11-09
 
 ### Changed

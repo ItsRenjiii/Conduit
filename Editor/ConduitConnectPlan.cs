@@ -314,7 +314,9 @@ namespace ItsRenji.Conduit
             {
                 return "Restart Claude after connecting. Its direct MCP entry stays process-free, and a "
                     + "session-start hook hands over the exact return path Conduit needs for work that "
-                    + "finishes later and then exits, so nothing of its own is left running.";
+                    + "finishes later and then exits, so nothing of its own is left running. A Claude "
+                    + "session loads only the Conduit server registered for its own folder: start the "
+                    + "session in this project's folder, or move it there, to get this project's tools.";
             }
 
             return "Restart the client after connecting. The entry is keyed per project, which costs "

@@ -545,7 +545,7 @@ VCC then offers each new release as an update. If the project has an older copy 
 2. Press **+** and choose **Add package from git URL...**
 3. Enter `https://github.com/ItsRenjiii/Conduit.git` and press **Add**.
 
-To pin a release, add its tag: `https://github.com/ItsRenjiii/Conduit.git#v1.0.4`.
+To pin a release, add its tag: `https://github.com/ItsRenjiii/Conduit.git#v1.0.5`.
 
 **From a local copy**
 
@@ -572,6 +572,8 @@ Unity 2022.3. The VRChat Worlds SDK and ProBuilder are optional: Conduit detects
 Conduit merges itself into the client's existing configuration rather than replacing it.
 
 Every Unity project receives its own server key, identity, credentials, and skills, so multiple projects can remain connected without routing a command into the wrong editor.
+
+Claude registers each project's server under that project's folder, so a Claude session loads only the server for the folder it runs in. Start the session in the Unity project's folder, or move it there, to reach that editor. The other clients load every project's server in every session.
 
 The Conduit window speaks your language: English, 日本語, 한국어, 简体中文, 繁體中文, Français, Deutsch, Español, Italiano, Português (Brasil), Polski, Русский and toki pona. Pick one from the Language card at the top of the window; the choice is remembered across restarts and projects.
 
