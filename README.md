@@ -9,7 +9,7 @@ Without leaving the agent session.**
 
 [![GitHub release](https://img.shields.io/github/v/release/ItsRenjiii/Conduit?display_name=tag&sort=semver)](https://github.com/ItsRenjiii/Conduit/releases/latest)
 [![VPM release](https://img.shields.io/vpm/v/com.itsrenji.conduit?repository_url=https%3A%2F%2Fitsrenjilabs.github.io%2Fvpm%2Findex.json)](https://itsrenjilabs.github.io/vpm/)
-[![Unity 2022.3](https://img.shields.io/badge/Unity-2022.3_LTS-black?logo=unity&logoColor=white)](#compatibility)
+[![Unity 2022.3 + 6000.0.67f1](https://img.shields.io/badge/Unity-2022.3_%2B_6000.0.67f1-black?logo=unity&logoColor=white)](#compatibility)
 [![VRChat Worlds and Avatars](https://img.shields.io/badge/VRChat-Worlds_%26_Avatars-blue?logo=vrchat&logoColor=white)](#compatibility)
 [![MCP](https://img.shields.io/badge/MCP-native-orange)](#it-works-inside-unity)
 
@@ -33,6 +33,7 @@ It gives AI coding agents a typed, inspectable route through Unity, the VRChat S
 ## Contents
 
 * [Why Conduit exists](#why-conduit-exists)
+* [Built over a year, verified in the editor](#built-over-a-year-verified-in-the-editor)
 * [What makes Conduit different](#what-makes-conduit-different)
 * [One pixel, a screen full of white](#one-pixel-a-screen-full-of-white)
 * [VRChat is part of the architecture](#vrchat-is-part-of-the-architecture)
@@ -79,6 +80,14 @@ Unity has editor state, serialized references, importers, assets, prefabs, compo
 VRChat adds another layer: UdonSharp compilation, compiled Udon programs, networking and ownership rules, SDK exposure, ClientSim, world metadata, upload validation, Quest constraints, and Build & Test.
 
 Conduit gives the agent a persistent route through that environment instead of leaving it on the filesystem and asking the user to do the rest.
+
+## Built over a year, verified in the editor
+
+Conduit was built over a year against real Unity and VRChat projects.
+
+Every part of the bridge was verified where it runs: compilation and domain reload recovery, atomic source edits and file history, compiled Udon inspection, per-variant shader verdicts, ClientSim control, SDK validation, and the VRChat build pipeline. Nothing described here is a demo-only path.
+
+Unity 6 (6000.0.67f1) is confirmed working alongside Unity 2022.3 LTS.
 
 ## Built around the work, not the demo
 
@@ -557,7 +566,7 @@ The examples ship inside the package as a sample. Agents read them in place, so 
 
 **Requirements**
 
-Unity 2022.3. The VRChat Worlds SDK and ProBuilder are optional: Conduit detects them and adds their tools when they are present. Newtonsoft JSON is installed automatically.
+Unity 2022.3 LTS or Unity 6 (6000.0.67f1). Both are confirmed working. The VRChat Worlds SDK and ProBuilder are optional: Conduit detects them and adds their tools when they are present. Newtonsoft JSON is installed automatically.
 
 ---
 
@@ -599,12 +608,14 @@ Users do not need to hand-edit JSON or TOML.
 
 The current development baseline is verified against:
 
-| Component         | Verified version    | Notes                                                                        |
-| ----------------- | ------------------- | ---------------------------------------------------------------------------- |
-| Unity             | 2022.3.22f1         | VRChat's Unity 2022 LTS line                                                 |
-| VRChat Worlds SDK | 3.10.5              | Enables Udon, world authoring, ClientSim, validation, and build tools        |
-| ProBuilder        | 5.2.4               | Optional; adds 74 bridge verbs when present                                  |
-| Operating system  | Windows             | Current supported development and harness-integration target                 |
+| Component         | Verified version             | Notes                                                                        |
+| ----------------- | ---------------------------- | ---------------------------------------------------------------------------- |
+| Unity             | 2022.3.22f1 and 6000.0.67f1  | Both confirmed working                                                       |
+| VRChat Worlds SDK | 3.10.5                       | Enables Udon, world authoring, ClientSim, validation, and build tools        |
+| ProBuilder        | 5.2.4                        | Optional; adds 74 bridge verbs when present                                  |
+| Operating system  | Windows                      | Current supported development and harness-integration target                 |
+
+Unity 6 (6000.0.67f1) is confirmed working alongside the 2022.3 line.
 
 Generic Unity authoring tools remain available in non-VRChat projects, including VRChat avatar projects.
 
@@ -615,6 +626,7 @@ VRChat Worlds-only tools are hidden when the Worlds SDK is absent, so the comman
 # What ships with Conduit
 
 * The in-editor MCP server and typed Unity bridge.
+* Built and verified over a year on real Unity and VRChat projects, on 2022.3.22f1 and 6000.0.67f1.
 * **225 core bridge verbs.**
 * **74 optional ProBuilder verbs.**
 * Direct Unity, UdonSharp, VRChat SDK, ClientSim, profiler, animation, scene, asset, prefab, and build-pipeline access.
